@@ -1077,15 +1077,26 @@ function parseUtilCSV(text) {
     if (k) colIdx[k] = i;
   });
 
-  // Key column indices by name — immune to column shifts
-  var iCurrPct     = colIdx["Current usage (%)"];
-  var iCurrDollars = colIdx["Current usage ($)"];
-  var iLicense     = colIdx["License ($)"];
-  var iStartDate   = colIdx["License start date"];
-  var iCompMo      = colIdx["Completed months"];
-  var iOnTrack     = colIdx["On track usage"];
-  var iVariance    = colIdx["Variance to track usage"];
-  var iMtd         = colIdx["March Expected Revenue To Date"] || 14;
+  // Key column indices by name — trim spaces for matching
+  function ci(name) {
+    // exact match first
+    if (colIdx[name] !== undefined) return colIdx[name];
+    // try with surrounding spaces stripped from all keys
+    var keys = Object.keys(colIdx);
+    for (var ki=0; ki<keys.length; ki++) {
+      if (keys[ki].trim() === name.trim()) return colIdx[keys[ki]];
+    }
+    return undefined;
+  }
+
+  var iCurrPct     = ci("Current usage (%)");
+  var iCurrDollars = ci("Current usage ($)");
+  var iLicense     = ci("License ($)");
+  var iStartDate   = ci("License start date");
+  var iCompMo      = ci("Completed months");
+  var iOnTrack     = ci("On track usage");
+  var iVariance    = ci("Variance to track usage");
+  var iMtd         = ci("March Expected Revenue To Date") || 14;
 
   function normalize(s) {
     return s.toLowerCase().replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim();
