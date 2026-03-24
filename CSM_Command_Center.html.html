@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoDocs CS Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#F4F6FA; --bg-mid:#EAEEF5; --surface:#FFFFFF;
+  --navy:#0E1F34; --navy-mid:#1C3250;
+  --blue:#0057E7; --blue-l:#1a6af0; --blue-d:rgba(0,87,231,0.08);
+  --green:#00963E; --green-b:#00BF63; --green-d:rgba(0,150,62,0.09);
+  --amber:#C47800; --amber-b:#F5A623; --amber-d:rgba(196,120,0,0.09);
+  --red:#C8182E; --red-b:#E8445A; --red-d:rgba(200,24,46,0.08);
+  --purple:#6D45D4; --purple-d:rgba(109,69,212,0.08);
+  --teal:#0891B2; --teal-d:rgba(8,145,178,0.08);
+  --orange:#F97316; --orange-d:rgba(249,115,22,0.08);
+  --done:#6B7A8D; --done-d:rgba(107,122,141,0.08);
+  --text:#0E1F34; --text-m:#4A5F78; --text-d:#8496AB;
+  --border:rgba(14,31,52,0.08); --border-m:rgba(14,31,52,0.13);
+  --sh-sm:0 1px 3px rgba(14,31,52,0.07),0 1px 2px rgba(14,31,52,0.05);
+  --sh-md:0 4px 12px rgba(14,31,52,0.10),0 2px 4px rgba(14,31,52,0.06);
+  --sh-lg:0 12px 40px rgba(14,31,52,0.14),0 4px 12px rgba(14,31,52,0.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;font-size:13px;min-height:100vh;overflow-x:auto;}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:52px;background:var(--navy);position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.18);}
+.hdr-l{display:flex;align-items:center;gap:16px;}
+.logo{font-family:"Syne",sans-serif;font-weight:800;font-size:15px;color:#fff;letter-spacing:-0.3px;}
+.logo span{color:#4A9FFF;}
+.hdiv{width:1px;height:18px;background:rgba(255,255,255,0.15);}
+.hdr-title{font-family:"DM Mono",monospace;font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:0.08em;text-transform:uppercase;}
+.hdr-stats{display:flex;gap:20px;align-items:center;}
+.stat{text-align:center;}
+.stat-v{font-family:"Syne",sans-serif;font-size:15px;font-weight:700;color:#fff;line-height:1;}
+.stat-l{font-family:"DM Mono",monospace;font-size:9px;color:rgba(255,255,255,0.38);text-transform:uppercase;letter-spacing:0.07em;margin-top:2px;}
+.hdr-actions{display:flex;gap:8px;align-items:center;}
+.btn{padding:7px 14px;border-radius:6px;font-family:"DM Sans",sans-serif;font-size:12px;font-weight:500;cursor:pointer;border:none;transition:all 0.15s;display:inline-flex;align-items:center;gap:5px;}
+.btn-primary{background:var(--blue);color:#fff;} .btn-primary:hover{background:var(--blue-l);}
+.btn-ghost{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);border:1px solid rgba(255,255,255,0.15);} .btn-ghost:hover{background:rgba(255,255,255,0.18);color:#fff;}
+.btn-perf{background:rgba(109,69,212,0.25);color:#C4AAFF;border:1px solid rgba(109,69,212,0.35);} .btn-perf:hover{background:rgba(109,69,212,0.38);}
+.vtog{display:flex;border:1px solid rgba(255,255,255,0.15);border-radius:6px;overflow:hidden;}
+.vbtn{padding:5px 11px;background:transparent;border:none;color:rgba(255,255,255,0.38);cursor:pointer;font-size:10px;font-family:"DM Mono",monospace;transition:all 0.15s;letter-spacing:0.05em;}
+.vbtn.active{background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);}
+/* BOARD TOGGLE */
+.btog{display:flex;border:1px solid rgba(255,255,255,0.15);border-radius:6px;overflow:hidden;}
+.btog-btn{padding:5px 12px;background:transparent;border:none;color:rgba(255,255,255,0.45);cursor:pointer;font-size:11px;font-family:"DM Sans",sans-serif;font-weight:500;transition:all 0.15s;}
+.btog-btn.active{background:rgba(255,255,255,0.15);color:#fff;}
+.btog-btn:hover:not(.active){color:rgba(255,255,255,0.75);}
+/* BOARD LABEL STRIP */
+.blabel{background:var(--navy-mid);border-bottom:1px solid rgba(255,255,255,0.06);padding:6px 24px;display:flex;align-items:center;gap:10px;}
+.blabel-txt{font-family:"Syne",sans-serif;font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.07em;}
+.blabel-tag{font-family:"DM Mono",monospace;font-size:9px;padding:2px 8px;border-radius:10px;font-weight:500;}
+.blabel-tag.contracted{background:var(--blue-d);color:#4A9FFF;border:1px solid rgba(74,159,255,0.2);}
+.blabel-tag.ppu{background:rgba(249,115,22,0.15);color:#FB923C;border:1px solid rgba(249,115,22,0.25);}
+/* INTEL */
+.intel{background:#fff;border-bottom:1px solid var(--border);padding:8px 24px;display:flex;align-items:center;gap:10px;box-shadow:var(--sh-sm);}
+.intel-lbl{font-family:"DM Mono",monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--purple);white-space:nowrap;display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.idot{width:6px;height:6px;border-radius:50%;background:var(--purple);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.i-alerts{display:flex;gap:6px;flex-wrap:wrap;}
+.ichip{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;font-family:"DM Sans",sans-serif;}
+.ichip.warn{background:var(--amber-d);color:var(--amber);border:1px solid rgba(196,120,0,0.2);}
+.ichip.danger{background:var(--red-d);color:var(--red);border:1px solid rgba(200,24,46,0.18);}
+.ichip.opp{background:var(--green-d);color:var(--green);border:1px solid rgba(0,150,62,0.18);}
+.ichip.info{background:var(--blue-d);color:var(--blue);border:1px solid rgba(0,87,231,0.18);}
+/* FILTER */
+.fbar{padding:8px 24px;display:flex;gap:6px;align-items:center;background:var(--bg);border-bottom:1px solid var(--border);}
+.flbl{font-family:"DM Mono",monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-d);flex-shrink:0;}
+.fchip{padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--border-m);background:var(--surface);color:var(--text-m);font-family:"DM Sans",sans-serif;transition:all 0.12s;font-weight:500;}
+.fchip.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+.fchip:hover:not(.active){border-color:var(--text-m);color:var(--text);}
+.srch{margin-left:auto;background:var(--surface);border:1px solid var(--border-m);border-radius:6px;padding:5px 10px;color:var(--text);font-family:"DM Sans",sans-serif;font-size:12px;outline:none;width:180px;transition:all 0.15s;}
+.srch:focus{border-color:var(--blue);width:220px;}
+/* BOARD */
+.board{padding:18px 16px 32px;display:flex;gap:10px;min-height:calc(100vh - 155px);align-items:flex-start;}
+.col{flex:0 0 262px;display:flex;flex-direction:column;gap:8px;}
+.col-hdr{padding:9px 12px;display:flex;align-items:center;justify-content:space-between;border-radius:8px;margin-bottom:2px;border:1px solid transparent;}
+.col-renewal   .col-hdr{background:rgba(196,120,0,0.07);border-color:rgba(196,120,0,0.15);}
+.col-atrisk    .col-hdr{background:rgba(200,24,46,0.06);border-color:rgba(200,24,46,0.14);}
+.col-attention .col-hdr{background:rgba(249,115,22,0.06);border-color:rgba(249,115,22,0.15);}
+.col-expansion .col-hdr{background:rgba(0,87,231,0.06);border-color:rgba(0,87,231,0.14);}
+.col-onboarding .col-hdr{background:rgba(8,145,178,0.06);border-color:rgba(8,145,178,0.14);}
+.col-steady    .col-hdr{background:rgba(0,150,62,0.06);border-color:rgba(0,150,62,0.14);}
+.col-inactive  .col-hdr{background:rgba(107,122,141,0.06);border-color:rgba(107,122,141,0.14);}
+.col-title{display:flex;align-items:center;gap:7px;font-family:"Syne",sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;}
+.cdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.col-meta{display:flex;align-items:center;gap:6px;}
+.ccnt{font-family:"DM Mono",monospace;font-size:11px;color:var(--text-m);font-weight:500;}
+.carr{font-family:"DM Mono",monospace;font-size:10px;color:var(--text-d);}
+.col-renewal   .col-title{color:var(--amber);}    .col-renewal   .cdot{background:var(--amber-b);}
+.col-atrisk    .col-title{color:var(--red);}      .col-atrisk    .cdot{background:var(--red-b);}
+.col-attention .col-title{color:#EA580C;}         .col-attention .cdot{background:#F97316;}
+.col-expansion .col-title{color:var(--blue);}     .col-expansion .cdot{background:var(--blue);}
+.col-onboarding .col-title{color:var(--teal);}    .col-onboarding .cdot{background:var(--teal);}
+.col-steady    .col-title{color:var(--green);}    .col-steady    .cdot{background:var(--green-b);}
+.col-inactive  .col-title{color:var(--done);}     .col-inactive  .cdot{background:var(--done);}
+.add-btn{width:100%;padding:8px;background:transparent;border:1px dashed var(--border-m);border-radius:8px;color:var(--text-d);font-size:12px;cursor:pointer;transition:all 0.12s;display:flex;align-items:center;justify-content:center;gap:5px;font-family:"DM Sans",sans-serif;margin-top:2px;}
+.add-btn:hover{border-color:var(--text-m);color:var(--text-m);background:var(--surface);}
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-left:3px solid transparent;border-radius:8px;padding:12px 12px 10px;cursor:pointer;transition:all 0.15s;position:relative;user-select:none;box-shadow:var(--sh-sm);}
+.card:hover{box-shadow:var(--sh-md);transform:translateY(-1px);border-color:var(--border-m);}
+.card.dragging{opacity:0.35;transform:rotate(1deg) scale(0.97);}
+.col-renewal   .card{border-left-color:var(--amber-b);}
+.col-atrisk    .card{border-left-color:var(--red-b);}
+.col-attention .card{border-left-color:#F97316;}
+.col-expansion .card{border-left-color:var(--blue);}
+.col-onboarding .card{border-left-color:var(--teal);}
+.col-steady    .card{border-left-color:var(--green-b);}
+.col-inactive  .card{border-left-color:var(--done);opacity:0.72;}
+.ctop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+.cname{font-family:"Syne",sans-serif;font-size:13px;font-weight:700;color:var(--text);line-height:1.3;flex:1;}
+.carr2{font-family:"DM Mono",monospace;font-size:11px;font-weight:500;color:var(--green);white-space:nowrap;margin-left:8px;}
+.calbl{font-family:"DM Mono",monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-d);margin-bottom:2px;}
+.caval{font-size:11.5px;color:var(--text-m);line-height:1.4;margin-bottom:7px;}
+.cdrow{display:flex;align-items:center;justify-content:space-between;padding-top:7px;border-top:1px solid var(--border);}
+.cdate{font-family:"DM Mono",monospace;font-size:10px;display:flex;align-items:center;gap:4px;font-weight:500;}
+.od{color:var(--red);} .soon{color:var(--amber);} .ok{color:var(--text-d);}
+.cbadges{display:flex;gap:3px;flex-wrap:wrap;}
+.bdg{font-family:"DM Mono",monospace;font-size:9px;padding:2px 5px;border-radius:3px;font-weight:500;}
+.bdg-n{background:var(--blue-d);color:var(--blue);}
+.bdg-a{background:var(--amber-d);color:var(--amber);}
+.bdg-h{background:var(--red-d);color:var(--red);}
+.bdg-e{background:var(--green-d);color:var(--green);}
+.bdg-ob{background:var(--teal-d);color:var(--teal);}
+.bdg-ppu{background:rgba(249,115,22,0.1);color:#EA580C;border:1px solid rgba(249,115,22,0.2);}
+.bdg-ov{background:rgba(200,24,46,0.1);color:#C8182E;border:1px solid rgba(200,24,46,0.2);}
+.bdg-fast{background:rgba(249,115,22,0.1);color:#EA580C;border:1px solid rgba(249,115,22,0.2);}
+.bdg-slow{background:rgba(196,120,0,0.1);color:#C47800;border:1px solid rgba(196,120,0,0.2);}
+.util-bar-wrap{margin-top:7px;padding-top:7px;border-top:1px solid rgba(14,31,52,0.08);}
+.util-bar-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;}
+.util-bar-lbl{font-family:"DM Mono",monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.07em;color:#8496AB;}
+.util-bar-val{font-family:"DM Mono",monospace;font-size:10px;font-weight:600;}
+.util-bar-track{background:rgba(14,31,52,0.07);border-radius:4px;height:5px;position:relative;overflow:hidden;}
+.util-bar-fill{height:100%;border-radius:4px;transition:width 0.3s;}
+.util-bar-marker{position:absolute;top:-2px;height:9px;width:2px;background:rgba(14,31,52,0.3);border-radius:1px;}
+.empty-drop{border:1px dashed var(--border-m);border-radius:8px;padding:14px;text-align:center;color:var(--text-d);font-size:11px;font-style:italic;}
+/* TABLE */
+.tbl-wrap{padding:20px 24px;display:none;}
+.tbl-wrap.vis{display:block;}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surface);border-radius:10px;overflow:hidden;box-shadow:var(--sh-sm);}
+.tbl th{font-family:"DM Mono",monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-d);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg-mid);white-space:nowrap;}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top;cursor:pointer;color:var(--text);}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:var(--bg);}
+.spill{font-family:"DM Mono",monospace;font-size:9px;padding:2px 7px;border-radius:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;}
+.s-renewal{background:var(--amber-d);color:var(--amber);}
+.s-atrisk{background:var(--red-d);color:var(--red);}
+.s-attention{background:rgba(249,115,22,0.08);color:#EA580C;}
+.s-expansion{background:var(--blue-d);color:var(--blue);}
+.s-onboarding{background:var(--teal-d);color:var(--teal);}
+.s-steady{background:var(--green-d);color:var(--green);}
+.s-inactive{background:var(--done-d);color:var(--done);}
+/* MODAL */
+.moverlay{display:none;position:fixed;inset:0;background:rgba(14,31,52,0.45);z-index:200;backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:20px;}
+.moverlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border-m);border-radius:14px;width:600px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--sh-lg);animation:sup 0.18s ease;}
+@keyframes sup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.mhdr{padding:20px 24px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.mhdr-l{flex:1;}
+.mstag{font-family:"DM Mono",monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:5px;display:flex;align-items:center;gap:5px;}
+.mname{font-family:"Syne",sans-serif;font-size:20px;font-weight:800;color:var(--text);line-height:1.2;}
+.mclose{background:var(--bg);border:1px solid var(--border-m);color:var(--text-m);width:30px;height:30px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;transition:all 0.12s;}
+.mclose:hover{background:var(--red-d);color:var(--red);}
+.mbody{padding:18px 24px;display:flex;flex-direction:column;gap:14px;}
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fg.full{grid-column:1/-1;}
+.flbl2{font-family:"DM Mono",monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.09em;color:var(--text-d);font-weight:500;}
+.fi{background:var(--bg);border:1px solid var(--border-m);border-radius:7px;padding:8px 11px;color:var(--text);font-family:"DM Sans",sans-serif;font-size:13px;outline:none;transition:border-color 0.12s;width:100%;}
+.fi:focus{border-color:var(--blue);background:#fff;}
+.fi.mono{font-family:"DM Mono",monospace;font-size:12px;}
+textarea.fi{resize:vertical;min-height:80px;line-height:1.5;}
+select.fi{cursor:pointer;}
+.nhist{display:flex;flex-direction:column;gap:5px;max-height:140px;overflow-y:auto;}
+.nentry{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 9px;font-size:11.5px;color:var(--text-m);line-height:1.5;}
+.nts{font-family:"DM Mono",monospace;font-size:9px;color:var(--text-d);margin-bottom:2px;}
+.mftr{padding:12px 24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--bg);border-radius:0 0 14px 14px;}
+.mftr-l{display:flex;gap:7px;} .mftr-r{display:flex;gap:7px;}
+.btn-lt{background:var(--bg-mid);color:var(--text-m);border:1px solid var(--border-m);} .btn-lt:hover{background:var(--border-m);color:var(--text);}
+.btn-del{background:var(--red-d);color:var(--red);border:1px solid rgba(200,24,46,0.2);} .btn-del:hover{background:rgba(200,24,46,0.14);}
+.btn-save{background:var(--blue);color:#fff;padding:8px 20px;} .btn-save:hover{background:var(--blue-l);}
+/* PERF SIDEBAR */
+.pov{display:none;position:fixed;inset:0;background:rgba(14,31,52,0.25);z-index:299;}
+.pov.open{display:block;}
+.psb{position:fixed;top:0;right:-440px;width:420px;height:100vh;background:var(--surface);border-left:1px solid var(--border-m);box-shadow:-8px 0 40px rgba(14,31,52,0.12);z-index:300;transition:right 0.28s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;overflow:hidden;}
+.psb.open{right:0;}
+.psb-hdr{padding:18px 20px 14px;border-bottom:1px solid var(--border);background:var(--navy);display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0;}
+.psb-ttl{font-family:"Syne",sans-serif;font-size:16px;font-weight:800;color:#fff;}
+.psb-sub{font-family:"DM Mono",monospace;font-size:9px;color:rgba(255,255,255,0.38);text-transform:uppercase;letter-spacing:0.08em;margin-top:3px;}
+.psb-cls{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);width:28px;height:28px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.12s;flex-shrink:0;}
+.psb-cls:hover{background:rgba(255,255,255,0.18);color:#fff;}
+.psb-body{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:16px;}
+.psumm{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.pstat{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 10px;text-align:center;}
+.pstat-v{font-family:"Syne",sans-serif;font-size:18px;font-weight:800;line-height:1;margin-bottom:4px;}
+.pstat-l{font-family:"DM Mono",monospace;font-size:8px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-d);}
+.pstat.sv .pstat-v{color:var(--green);} .pstat.ex .pstat-v{color:var(--blue);} .pstat.rn .pstat-v{color:var(--amber);}
+.psec{font-family:"Syne",sans-serif;font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.lform{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:13px;display:flex;flex-direction:column;gap:9px;}
+.lform select,.lform input,.lform textarea{background:var(--surface);border:1px solid var(--border-m);border-radius:6px;padding:7px 10px;color:var(--text);font-family:"DM Sans",sans-serif;font-size:12px;outline:none;width:100%;transition:border-color 0.12s;}
+.lform select:focus,.lform input:focus,.lform textarea:focus{border-color:var(--blue);}
+.lform textarea{resize:none;height:54px;line-height:1.4;}
+.lrow{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.lfl{display:flex;flex-direction:column;}
+.llbl{font-family:"DM Mono",monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-d);margin-bottom:3px;}
+.lbtn{background:var(--navy);color:#fff;width:100%;padding:8px;border-radius:6px;border:none;font-family:"DM Sans",sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:background 0.12s;}
+.lbtn:hover{background:var(--navy-mid);}
+.wlist{display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;}
+.wentry{background:var(--surface);border:1px solid var(--border);border-left:3px solid transparent;border-radius:7px;padding:10px 12px;position:relative;}
+.wentry.saved{border-left-color:var(--green-b);} .wentry.expansion{border-left-color:var(--blue);} .wentry.renewal{border-left-color:var(--amber-b);}
+.wtop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
+.wacc{font-family:"Syne",sans-serif;font-size:12px;font-weight:700;color:var(--text);}
+.warr{font-family:"DM Mono",monospace;font-size:12px;font-weight:600;}
+.wentry.saved .warr{color:var(--green);} .wentry.expansion .warr{color:var(--blue);} .wentry.renewal .warr{color:var(--amber);}
+.wmeta{display:flex;gap:8px;align-items:center;}
+.wtype{font-family:"DM Mono",monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.06em;padding:1px 5px;border-radius:3px;}
+.wtype.saved{background:var(--green-d);color:var(--green);} .wtype.expansion{background:var(--blue-d);color:var(--blue);} .wtype.renewal{background:var(--amber-d);color:var(--amber);}
+.wdate{font-family:"DM Mono",monospace;font-size:9px;color:var(--text-d);}
+.wnote{font-size:11px;color:var(--text-m);line-height:1.4;margin-top:3px;}
+.wdel{position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;color:var(--text-d);font-size:13px;opacity:0;transition:opacity 0.12s;padding:2px;}
+.wentry:hover .wdel{opacity:1;} .wdel:hover{color:var(--red);}
+.empty-log{text-align:center;padding:24px 16px;color:var(--text-d);font-size:12px;font-style:italic;}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--navy);border-radius:8px;padding:10px 14px;font-size:12px;color:#fff;z-index:9000;display:flex;align-items:center;gap:7px;box-shadow:var(--sh-lg);animation:tst 0.18s ease;max-width:280px;}
+@keyframes tst{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:translateX(0)}}
+::-webkit-scrollbar{width:5px;height:5px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:var(--border-m);border-radius:10px;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="logo">Go<span>Docs</span></div>
+    <div class="hdiv"></div>
+    <div class="hdr-title">CS Command Center</div>
+  </div>
+  <div class="hdr-stats">
+    <div class="stat"><div class="stat-v" id="s-acc">0</div><div class="stat-l">Accounts</div></div>
+    <div class="stat"><div class="stat-v" id="s-arr">$0</div><div class="stat-l">Total ARR</div></div>
+    <div class="stat"><div class="stat-v" id="s-risk">0</div><div class="stat-l" id="s-risk-lbl">At Risk</div></div>
+    <div class="stat" id="s-ren-wrap"><div class="stat-v" id="s-ren">0</div><div class="stat-l">Renewal Due</div></div>
+    <div class="stat" id="s-ob-wrap"><div class="stat-v" id="s-ob">0</div><div class="stat-l">Onboarding</div></div>
+  </div>
+  <div class="hdr-actions">
+    <div class="btog">
+      <button class="btog-btn active" id="btog-contracted" onclick="switchBoard('contracted')">Contracted</button>
+      <button class="btog-btn" id="btog-ppu" onclick="switchBoard('ppu')">Pay-Per-Use</button>
+    </div>
+    <div class="vtog">
+      <button class="vbtn active" id="vb-board" onclick="setView('board')">BOARD</button>
+      <button class="vbtn" id="vb-table" onclick="setView('table')">TABLE</button>
+    </div>
+    <button class="btn btn-ghost" onclick="doExport()">&#8595; Export</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('util-upload').click()" title="Upload subscription utilization CSV">&#8593; Utilization</button>
+    <input type="file" id="util-upload" accept=".csv" style="display:none;" onchange="handleUtilUpload(event)">
+    <button class="btn btn-ghost" onclick="exportExec()">&#128228; Share View</button>
+    <button class="btn btn-perf" onclick="openPerf()">&#128202; Performance</button>
+    <button class="btn btn-primary" onclick="openNew()">+ Account</button>
+  </div>
+</div>
+
+<div class="blabel">
+  <span class="blabel-txt" id="board-label">Contracted Accounts</span>
+  <span class="blabel-tag contracted" id="board-tag">CONTRACT</span>
+</div>
+
+<div class="intel">
+  <div class="intel-lbl"><div class="idot"></div>Signals</div>
+  <div class="i-alerts" id="i-alerts"><span class="ichip info">Loading...</span></div>
+</div>
+
+<div class="fbar">
+  <span class="flbl">Filter:</span>
+  <button class="fchip active" onclick="setFilter('all',this)">All</button>
+  <button class="fchip" onclick="setFilter('overdue',this)">&#9888; Overdue</button>
+  <button class="fchip" onclick="setFilter('week',this)">This Week</button>
+  <button class="fchip" onclick="setFilter('big',this)">$50k+ ARR</button>
+  <button class="fchip" onclick="setFilter('attention',this)">Needs Attention</button>
+  <input class="srch" type="text" placeholder="Search accounts..." id="srch" oninput="renderBoard()">
+</div>
+
+<div class="board" id="board-view">
+  <div id="col-wrap-renewal" class="col col-renewal" ondragover="onDO(event)" ondrop="onDrop(event,'renewal')">
+    <div class="col-hdr"><div class="col-title"><div class="cdot"></div>Renewal Due</div><div class="col-meta"><span class="ccnt" id="c-renewal">0</span><span class="carr" id="a-renewal"></span></div></div>
+    <div id="cards-renewal"></div>
+    <button class="add-btn" onclick="openNew('renewal')">+ Add</button>
+  </div>
+  <div id="col-wrap-atrisk" class="col col-atrisk" ondragover="onDO(event)" ondrop="onDrop(event,'atrisk')">
+    <div class="col-hdr"><div class="col-title"><div class="cdot"></div>At Risk</div><div class="col-meta"><span class="ccnt" id="c-atrisk">0</span><span class="carr" id="a-atrisk"></span></div></div>
+    <div id="cards-atrisk"></div>
+    <button class="add-btn" onclick="openNew('atrisk')">+ Add</button>
+  </div>
+  <div class="col col-attention" ondragover="onDO(event)" ondrop="onDrop(event,'attention')">
+    <div class="col-hdr"><div class="col-title"><div class="cdot"></div>Needs Attention</div><div class="col-meta"><span class="ccnt" id="c-attention">0</span><span class="carr" id="a-attention"></span></div></div>
+    <div id="cards-attention"></div>
+    <button class="add-btn" onclick="openNew('attention')">+ Add</button>
+  </div>
+  <div class="col col-expansion" ondragover="onDO(event)" ondrop="onDrop(event,'expansion')">
+    <div class="col-hdr"><div class="col-title"><div class="cdot"></div>Expansion</div><div class="col-meta"><span class="ccnt" id="c-expansion">0</span><span class="carr" id="a-expansion"></span></div></div>
+    <div id="cards-expansion"></div>
+    <button class="add-btn" onclick="openNew('expansion')">+ Add</button>
+  </div>
+  <div id="col-wrap-onboarding" class="col col-onboarding" ondragover="onDO(event)" ondrop="onDrop(event,'onboarding')">
+    <div class="col-hdr"><div class="col-title"><div class="cdot"></div>Onboarding</div><div class="col-meta"><span class="ccnt" id="c-onboarding">0</span><span class="carr" id="a-onboarding"></span></div></div>
+    <div id="cards-onboarding"></div>
+    <button class="add-btn" onclick="openNew('onboarding')">+ Add</button>
+  </div>
+  <div class="col col-steady" ondragover="onDO(event)" ondrop="onDrop(event,'steady')">
+    <div class="col-hdr"><div class="col-title"><div class="cdot"></div>Steady State</div><div class="col-meta"><span class="ccnt" id="c-steady">0</span><span class="carr" id="a-steady"></span></div></div>
+    <div id="cards-steady"></div>
+    <button class="add-btn" onclick="openNew('steady')">+ Add</button>
+  </div>
+  <div id="col-wrap-inactive" class="col col-inactive" ondragover="onDO(event)" ondrop="onDrop(event,'inactive')">
+    <div class="col-hdr"><div class="col-title"><div class="cdot"></div>Inactive</div><div class="col-meta"><span class="ccnt" id="c-inactive">0</span><span class="carr" id="a-inactive"></span></div></div>
+    <div id="cards-inactive"></div>
+    <button class="add-btn" onclick="openNew('inactive')">+ Add</button>
+  </div>
+</div>
+
+<div class="tbl-wrap" id="table-view">
+  <table class="tbl"><thead><tr><th>Account</th><th>ARR</th><th>Stage</th><th>Next Action</th><th>Next Date</th><th>Health</th></tr></thead><tbody id="tbl-body"></tbody></table>
+</div>
+
+<div class="moverlay" id="moverlay" onclick="handleOC(event)">
+  <div class="modal">
+    <div class="mhdr">
+      <div class="mhdr-l">
+        <div class="mstag"><div class="cdot" id="m-dot" style="width:6px;height:6px;"></div><span id="m-stag" style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;"></span></div>
+        <div class="mname" id="m-name">New Account</div>
+      </div>
+      <button class="mclose" onclick="closeModal()">&#10005;</button>
+    </div>
+    <div class="mbody">
+      <div class="mrow">
+        <div class="fg"><div class="flbl2">Account Name *</div><input class="fi" type="text" id="f-name" placeholder="Account name" oninput="updMName()"></div>
+        <div class="fg"><div class="flbl2">Annual Revenue ($)</div><input class="fi mono" type="number" id="f-arr" placeholder="120000"></div>
+      </div>
+      <div class="mrow">
+        <div class="fg"><div class="flbl2">Stage</div><select class="fi" id="f-stage" onchange="updMStage()"></select></div>
+        <div class="fg"><div class="flbl2">Health Score (1-5)</div><input class="fi mono" type="number" id="f-health" placeholder="4" min="1" max="5"></div>
+      </div>
+      <div class="fg full"><div class="flbl2">Next Action</div><input class="fi" type="text" id="f-action" placeholder="What needs to happen next?"></div>
+      <div class="mrow">
+        <div class="fg"><div class="flbl2">Next Date</div><input class="fi mono" type="date" id="f-date"></div>
+        <div class="fg"><div class="flbl2">Contact</div><input class="fi" type="text" id="f-contact" placeholder="Name / title"></div>
+      </div>
+      <div class="fg"><div class="flbl2">Products / Loan Types</div><input class="fi" type="text" id="f-products" placeholder="DSCR, Fix & Flip, CRE..."></div>
+      <div class="fg"><div class="flbl2">Add Meeting Note</div><textarea class="fi" id="f-note" placeholder="Paste meeting notes, decisions, flags..."></textarea></div>
+      <div class="fg" id="nhg" style="display:none;"><div class="flbl2">Note History</div><div class="nhist" id="nhist"></div></div>
+    </div>
+    <div class="mftr">
+      <div class="mftr-l"><button class="btn btn-del" id="btn-del" onclick="delCard()" style="display:none;">Delete</button></div>
+      <div class="mftr-r">
+        <button class="btn btn-lt" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-save" onclick="saveCard()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pov" id="pov" onclick="closePerf()"></div>
+<div class="psb" id="psb">
+  <div class="psb-hdr">
+    <div><div class="psb-ttl">Performance Tracker</div><div class="psb-sub">Revenue saved &middot; Expansion &middot; Renewals</div></div>
+    <button class="psb-cls" onclick="closePerf()">&#10005;</button>
+  </div>
+  <div class="psb-body">
+    <div>
+      <div class="psec">Year-to-Date</div>
+      <div class="psumm">
+        <div class="pstat sv"><div class="pstat-v" id="ps-sv">$0</div><div class="pstat-l">Revenue Saved</div></div>
+        <div class="pstat ex"><div class="pstat-v" id="ps-ex">$0</div><div class="pstat-l">Expansion ARR</div></div>
+        <div class="pstat rn"><div class="pstat-v" id="ps-rn">0</div><div class="pstat-l">Renewals</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="psec">Log a Win</div>
+      <div class="lform">
+        <div class="lrow">
+          <div class="lfl"><div class="llbl">Account</div><select id="lf-acc"><option value="">Select account...</option></select></div>
+          <div class="lfl"><div class="llbl">Type</div>
+            <select id="lf-type">
+              <option value="saved">Revenue Saved</option>
+              <option value="expansion">Expansion ARR</option>
+              <option value="renewal">Renewal Executed</option>
+            </select>
+          </div>
+        </div>
+        <div class="lrow">
+          <div class="lfl"><div class="llbl">Amount ($)</div><input type="number" id="lf-arr" placeholder="75000"></div>
+          <div class="lfl"><div class="llbl">Date</div><input type="date" id="lf-date"></div>
+        </div>
+        <div class="lfl"><div class="llbl">Notes</div><textarea id="lf-note" placeholder="What happened?"></textarea></div>
+        <button class="lbtn" onclick="logWin()">+ Log Win</button>
+      </div>
+    </div>
+    <div>
+      <div class="psec">Win Log <span id="wc" style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-d);font-weight:400;"></span></div>
+      <div class="wlist" id="wlist"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var SEED_CONTRACTED = [{"id": "1773845667041wdsltj", "name": "Longhorn", "arr": 550000, "stage": "attention", "health": 6, "action": "Follow up on DSCR activation \u2014 account standing by", "date": "2026-04-01", "contact": "J Garza, C Collins", "products": "DSCR", "notes": [{"ts": "2026-03-18", "text": "Standing by for them to activate on DSCR."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 20.0, "onTrackPct": 8.0, "variancePct": 12.0, "licenseTotal": 550000.0, "currDollars": 86100.0, "overage": false, "status": "on_track", "updatedAt": "2026-03-24"}}, {"id": "1773845667043f74uj8", "name": "Cornerstone", "arr": 75000, "stage": "atrisk", "health": 3, "action": "Re-engagement push \u2014 unresponsive, renewal Oct 2026", "date": "2026-03-25", "contact": "E Little / M Davis", "products": "", "notes": [{"ts": "2026-03-18", "text": "Continues to be unresponsive to contact attempts. Slight uptick in ordering."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 9.0, "onTrackPct": 43.0, "variancePct": -34.0, "licenseTotal": 75000.0, "currDollars": 5520.0, "overage": false, "status": "slow", "updatedAt": "2026-03-24"}}, {"id": "1773845667044tz3plr", "name": "HEM", "arr": 300000, "stage": "expansion", "health": 9, "action": "Track overage timing \u2014 project month 6 breach, prep expansion proposal", "date": "2026-04-01", "contact": "C Tona / A Vidal, H Phan", "products": "", "notes": [{"ts": "2026-03-18", "text": "Tracking vastly ahead \u2014 used 43% of subscription <2 months in. Expected overage by month 6."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "17738456670455oh5cz", "name": "Anchor Loans", "arr": 700000, "stage": "renewal", "health": 7, "action": "Follow up on renewal feedback from 2/26 internal review", "date": "2026-03-20", "contact": "E Zambo / D Reynolds, J Apodaca", "products": "", "notes": [{"ts": "2026-03-18", "text": "1st renewal proposal presented. Anchor providing feedback after internal review on 2/26. Term ends Apr 1."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 67.0, "onTrackPct": 83.0, "variancePct": -16.0, "licenseTotal": 700000.0, "currDollars": 447925.0, "overage": false, "status": "on_track", "updatedAt": "2026-03-24"}}, {"id": "1773845667046m2rdgw", "name": "Cake Mortgage", "arr": 200000, "stage": "expansion", "health": 9, "action": "Drive 00K scale-up conversation \u2014 volume supports it", "date": "2026-03-26", "contact": "D Abelyan", "products": "", "notes": [{"ts": "2026-03-18", "text": "Discussion with leadership on $400K scale-up on 2/26. Volume supports $400K."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 150, "onTrackPct": 83.0, "variancePct": null, "licenseTotal": 200000.0, "currDollars": 380980.0, "overage": true, "status": "overage", "updatedAt": "2026-03-24"}}, {"id": "1773845667047xe6d10", "name": "Capital Direct", "arr": 24000, "stage": "atrisk", "health": 3, "action": "Re-engagement \u2014 unresponsive after unused credit inquiry", "date": "2026-03-25", "contact": "Francisco Williams", "products": "", "notes": [{"ts": "2026-03-18", "text": "Asked about unused credit but now will not respond to requests to discuss."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 53.0, "onTrackPct": 83.0, "variancePct": -30.0, "licenseTotal": 24000.0, "currDollars": 12015.0, "overage": false, "status": "slow", "updatedAt": "2026-03-24"}}, {"id": "1773845667048ivvokq", "name": "Solomon Foundation", "arr": 75000, "stage": "attention", "health": 3, "action": "Support new doc team through config changes and training", "date": "2026-04-01", "contact": "B Wagner", "products": "", "notes": [{"ts": "2026-03-18", "text": "Changes in leadership and new doc team. Supporting config + training. Max credit $25K."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 55.0, "onTrackPct": 83.0, "variancePct": -28.0, "licenseTotal": 75000.0, "currDollars": 40940.0, "overage": false, "status": "slow", "updatedAt": "2026-03-24"}}, {"id": "1773845667050z2pg1s", "name": "CU Evolution", "arr": 24000, "stage": "atrisk", "health": 2, "action": "Renewal notice overdue \u2014 last attempt failed, escalate", "date": "2026-03-19", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "Not responding to contact attempts. Renewal notice window passed (30 days)."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 8.0, "onTrackPct": 81.0, "variancePct": -72.0, "licenseTotal": 24000.0, "currDollars": 1620.0, "overage": false, "status": "slow", "updatedAt": "2026-03-24"}}, {"id": "1773845667051z22puy", "name": "Baxter", "arr": 24000, "stage": "renewal", "health": 8, "action": "Send renewal notice \u2014 confirmed $24K, they are expecting it", "date": "2026-03-19", "contact": "D Nevarez", "products": "", "notes": [{"ts": "2026-03-18", "text": "Confirmed $24K renewal. Notice should go out \u2014 they are expecting it."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 57.0, "onTrackPct": 77.0, "variancePct": -19.0, "licenseTotal": 24000.0, "currDollars": 13740.0, "overage": false, "status": "on_track", "updatedAt": "2026-03-24"}}, {"id": "1773845667052vyf8kh", "name": "Golden 1", "arr": 75000, "stage": "renewal", "health": 8, "action": "Send renewal notice \u2014 confirmed $75K, they are expecting it", "date": "2026-03-19", "contact": "Mandie Stilleke / Marcella Stanley", "products": "", "notes": [{"ts": "2026-03-18", "text": "Confirmed $75K renewal. They are expecting the notice. $125K tier-up still in contract but not needed yet."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 80.0, "onTrackPct": 73.0, "variancePct": 7.0, "licenseTotal": 75000.0, "currDollars": 56563.0, "overage": false, "status": "on_track", "updatedAt": "2026-03-24"}}, {"id": "1773845667053dqi6h1", "name": "HouseMax", "arr": 200000, "stage": "steady", "health": 6, "action": "Schedule check-in \u2014 no updates, current term ends May", "date": "2026-04-15", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "No updates."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 81.0, "onTrackPct": 68.0, "variancePct": 13.0, "licenseTotal": 200000.0, "currDollars": 150300.0, "overage": false, "status": "on_track", "updatedAt": "2026-03-24"}}, {"id": "1773845667054bvm85d", "name": "First Mid Bank & Trust", "arr": 36000, "stage": "expansion", "health": 8, "action": "Get volume estimates from June acquisition \u2014 entering overage month 8", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "Entering overage in month 8. Meeting monthly. Next month: volume estimates from acquisition effective June."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 150, "onTrackPct": 66.0, "variancePct": null, "licenseTotal": 36000.0, "currDollars": 37503.0, "overage": true, "status": "overage", "updatedAt": "2026-03-24"}}, {"id": "17738456670551158r1", "name": "Fremont", "arr": 125000, "stage": "steady", "health": 6, "action": "Check in \u2014 no updates logged", "date": "2026-04-15", "contact": "A Chow", "products": "", "notes": [{"ts": "2026-03-18", "text": "No updates."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 56.0, "onTrackPct": 59.0, "variancePct": -4.0, "licenseTotal": 125000.0, "currDollars": 68500.0, "overage": false, "status": "on_track", "updatedAt": "2026-03-24"}}, {"id": "17738456670563gx0tn", "name": "Palmetto CU", "arr": 24000, "stage": "steady", "health": 6, "action": "Monitor \u2014 no updates, long runway", "date": "2026-05-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "No updates."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773845667057d3i06h", "name": "Apex Capital", "arr": 12000, "stage": "expansion", "health": 7, "action": "May meeting: right-size subscription \u2014 in significant overage, SBA loan underway", "date": "2026-05-01", "contact": "M Michalak", "products": "", "notes": [{"ts": "2026-03-18", "text": "In significant overage. Doing 1st SBA loan. Meeting set for May to determine correct subscription size."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 150, "onTrackPct": 50.0, "variancePct": null, "licenseTotal": 12000.0, "currDollars": 23093.0, "overage": true, "status": "overage", "updatedAt": "2026-03-24"}}, {"id": "1773845667058zrftos", "name": "Acra/Citadel", "arr": 400000, "stage": "expansion", "health": 9, "action": "QBR with new exec in March \u2014 tracking 73% at 6 months", "date": "2026-03-31", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "Continuing to track significantly ahead of subscription (73% at 6 months). QBR set for March with their new exec."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 86.0, "onTrackPct": 50.0, "variancePct": 37.0, "licenseTotal": 400000.0, "currDollars": 306525.0, "overage": false, "status": "fast", "updatedAt": "2026-03-24"}}, {"id": "1773845667060n8bku5", "name": "San Francisco CU", "arr": 36000, "stage": "steady", "health": 6, "action": "Check in \u2014 no updates logged", "date": "2026-04-15", "contact": "S Bernal", "products": "", "notes": [{"ts": "2026-03-18", "text": "No updates."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 87.0, "onTrackPct": 50.0, "variancePct": 38.0, "licenseTotal": 36000.0, "currDollars": 27750.0, "overage": false, "status": "fast", "updatedAt": "2026-03-24"}}, {"id": "1773845667061dlydtb", "name": "Stanford Federal", "arr": 24000, "stage": "attention", "health": 7, "action": "Follow up post-credit \u2014 worked through prod glitches, credited affected loans", "date": "2026-03-25", "contact": "K Fairfax", "products": "", "notes": [{"ts": "2026-03-18", "text": "Worked through prod glitches \u2014 credited affected loans."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 76.0, "onTrackPct": 50.0, "variancePct": 27.0, "licenseTotal": 24000.0, "currDollars": 16615.0, "overage": false, "status": "fast", "updatedAt": "2026-03-24"}}, {"id": "1773845667062qn38j4", "name": "Alabama CU", "arr": 36000, "stage": "attention", "health": 7, "action": "Continue monthly connections \u2014 closing out portal items", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "Continuing to close out items via portal and monthly connections."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 62.0, "onTrackPct": 50.0, "variancePct": 12.0, "licenseTotal": 36000.0, "currDollars": 21500.0, "overage": false, "status": "on_track", "updatedAt": "2026-03-24"}}, {"id": "1773845667063di45sx", "name": "JLD Capital", "arr": 75000, "stage": "steady", "health": 6, "action": "Check in \u2014 no updates logged", "date": "2026-04-15", "contact": "J Nierengarten", "products": "", "notes": [{"ts": "2026-03-18", "text": "No updates."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 57.0, "onTrackPct": 41.0, "variancePct": 16.0, "licenseTotal": 75000.0, "currDollars": 37950.0, "overage": false, "status": "on_track", "updatedAt": "2026-03-24"}}, {"id": "1773845667064xo4xso", "name": "ABL", "arr": 500000, "stage": "attention", "health": 7, "action": "JSON mapping improvements \u2014 follow up with tech team", "date": "2026-03-25", "contact": "M Kirkwood / A Cohen", "products": "", "notes": [{"ts": "2026-03-18", "text": "Working through JSON mapping improvements with their tech team."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 42.0, "onTrackPct": 33.0, "variancePct": 9.0, "licenseTotal": 250000.0, "currDollars": 93355.0, "overage": false, "status": "on_track", "updatedAt": "2026-03-24"}}, {"id": "17738456670657kllhf", "name": "Lima One", "arr": 250000, "stage": "steady", "health": 6, "action": "Check in \u2014 no updates logged", "date": "2026-04-15", "contact": "A Williams", "products": "", "notes": [{"ts": "2026-03-18", "text": "No updates."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 51.0, "onTrackPct": 33.0, "variancePct": 18.0, "licenseTotal": 250000.0, "currDollars": 112320.0, "overage": false, "status": "on_track", "updatedAt": "2026-03-24"}}, {"id": "1773845667066w1a0yf", "name": "AFCU", "arr": 36000, "stage": "steady", "health": 6, "action": "Check in \u2014 no updates logged", "date": "2026-04-15", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "No updates."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773845667067rgmwkw", "name": "Colorado Federal Savings", "arr": 24000, "stage": "steady", "health": 6, "action": "Check in \u2014 no updates logged", "date": "2026-04-15", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "No updates."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773845667068sjumvq", "name": "Cyprus CU", "arr": 36000, "stage": "onboarding", "health": 7, "action": "Follow up on onboarding transition", "date": "2026-03-25", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "Transitioning out of onboarding."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "17738456670691zw1ba", "name": "Battle Bank", "arr": 24000, "stage": "atrisk", "health": 4, "action": "Follow up \u2014 first live loan still pending, precious metals paused", "date": "2026-03-25", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "Still have not completed 1st live loan (waiting on them). Putting precious metals on back burner."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "17738456670714pyi8j", "name": "Escrow Analytics", "arr": 24000, "stage": "onboarding", "health": 7, "action": "Next onboarding step: schedule training", "date": "2026-03-25", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "Next step in onboarding is training."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "17738456670727q4ybl", "name": "Symetra", "arr": 115000, "stage": "attention", "health": 6, "action": "Follow up post 2/24 meeting", "date": "2026-03-24", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "Meeting with on 2/24."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773845667073mdnkav", "name": "4Fi MD", "arr": 12000, "stage": "attention", "health": 7, "action": "Track config changes \u2014 increasing origination", "date": "2026-04-01", "contact": "C McCorkle", "products": "", "notes": [{"ts": "2026-03-18", "text": "Increasing origination, tracking minor config changes."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 1.0, "onTrackPct": 6.0, "variancePct": -4.0, "licenseTotal": 12000.0, "currDollars": 175.0, "overage": false, "status": "on_track", "updatedAt": "2026-03-24"}}, {"id": "1773845667074pie8lw", "name": "AVANA", "arr": 12000, "stage": "steady", "health": 5, "action": "Check in \u2014 no updates logged", "date": "2026-04-15", "contact": "M Hunt / B Vaughan", "products": "", "notes": [{"ts": "2026-03-18", "text": "No updates."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 19.0, "onTrackPct": 0.0, "variancePct": 19.0, "licenseTotal": 12000.0, "currDollars": 375.0, "overage": false, "status": "on_track", "updatedAt": "2026-03-24"}}, {"id": "1773845667075h3mwws", "name": "Spectra Lending", "arr": 24000, "stage": "onboarding", "health": 7, "action": "Complete sampling phase \u2014 1 live loan done", "date": "2026-03-25", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "Completed 1 live loan on a rush. Still in sampling."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773845667076jvkflh", "name": "AAA Capital", "arr": 24000, "stage": "attention", "health": 7, "action": "Monitor \u2014 invoice paid 2/23, term reset", "date": "2026-04-01", "contact": "Harold Yang", "products": "", "notes": [{"ts": "2026-03-18", "text": "Invoice paid 2/23. Term reset."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 2.0, "onTrackPct": -1.0, "variancePct": 3.0, "licenseTotal": 24000.0, "currDollars": 0.0, "overage": false, "status": "on_track", "updatedAt": "2026-03-24"}}, {"id": "17738456670773pojlh", "name": "Fairwinds", "arr": 24000, "stage": "steady", "health": 3, "action": "Follow up on mods improvements they are looking forward to", "date": "2026-04-01", "contact": "F Stucky", "products": "", "notes": [{"ts": "2026-03-18", "text": "Renewed for 2 years. Continues to look forward to mods improvements."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 11.0, "onTrackPct": 99.0, "variancePct": -88.0, "licenseTotal": 24000.0, "currDollars": 1650.0, "overage": false, "status": "slow", "updatedAt": "2026-03-24"}}, {"id": "1773845667078hx62ox", "name": "MACU", "arr": 100000, "stage": "onboarding", "health": 7, "action": "Work through specific configuration needs", "date": "2026-03-25", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "Working through their specific configuration needs."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773845667079z2b3ne", "name": "Castle Law", "arr": 36000, "stage": "onboarding", "health": 7, "action": "Complete sampling phase of onboarding", "date": "2026-03-25", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "In sampling phase of onboarding."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773845667080krgd3o", "name": "EverBank", "arr": 250000, "stage": "inactive", "health": 8, "action": "Monitor \u2014 renewed 2/21 at $250K, invoice at $200K with credits", "date": "2026-06-01", "contact": "G Smith / S Rogers", "products": "", "notes": [{"ts": "2026-03-18", "text": "Renewal signed 2/21. $250K in effect, invoice for $200K with $250K in credits."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z", "util": {"currPct": 6.0, "onTrackPct": -8.0, "variancePct": 14.0, "licenseTotal": 250000.0, "currDollars": 0.0, "overage": false, "status": "on_track", "updatedAt": "2026-03-24"}}, {"id": "1773845667081k3f2jd", "name": "Alpine Credit Union", "arr": 24000, "stage": "onboarding", "health": 7, "action": "Complete configuration \u2014 less than 1 week in", "date": "2026-03-25", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "In configuration, less than 1 week."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773845667083si6l0g", "name": "Newity LLC", "arr": 0, "stage": "onboarding", "health": 5, "action": "Determine next steps after POC", "date": "2026-03-25", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "Determining next steps after POC."}], "aiHint": null, "createdAt": "2026-03-18T00:00:00.000Z"}];
+var SEED_PPU = [{"id": "17738541654784nhs0", "name": "Altura Credit Union", "arr": 9916, "stage": "steady", "health": null, "action": "Monitor usage \u2014 check in if volume shifts", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $4,958. Annual run rate: $9,916. L3M avg/mo: $1,009."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165479i7x2o", "name": "Amres Corporation", "arr": 4552, "stage": "steady", "health": null, "action": "Monitor \u2014 no recent orders, engage if opportunity surfaces", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $2,276. Annual run rate: $4,552. L3M avg/mo: $0. Conversion target: Q4 2025."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165480gj5c3", "name": "Anchor Bank", "arr": 0, "stage": "steady", "health": null, "action": "Monitor \u2014 no recent orders, engage if opportunity surfaces", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $0. Annual run rate: $0. L3M avg/mo: $0."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165481v7qer", "name": "APOSTOLIC MUTUAL, INC.", "arr": 1532, "stage": "steady", "health": null, "action": "Monitor usage \u2014 check in if volume shifts", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $766. Annual run rate: $1,532. L3M avg/mo: $255."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165482jgnrr", "name": "Astera Credit Union", "arr": 0, "stage": "steady", "health": null, "action": "Monitor \u2014 no recent orders, engage if opportunity surfaces", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $0. Annual run rate: $0. L3M avg/mo: $0."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165483vs8on", "name": "Banner Bank", "arr": 0, "stage": "steady", "health": null, "action": "Monitor \u2014 no recent orders, engage if opportunity surfaces", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $0. Annual run rate: $0. L3M avg/mo: $0."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "17738541654840ytvu", "name": "California Credit Union", "arr": 0, "stage": "steady", "health": null, "action": "Monitor \u2014 no recent orders, engage if opportunity surfaces", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $0. Annual run rate: $0. L3M avg/mo: $0."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "17738541654868ehib", "name": "Capital Alliance, LLC", "arr": 0, "stage": "steady", "health": null, "action": "Monitor \u2014 no recent orders, engage if opportunity surfaces", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $0. Annual run rate: $0. L3M avg/mo: $0. Conversion target: H2 2026."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165488gq7pl", "name": "Church Development Fund, Inc.", "arr": 55996, "stage": "steady", "health": null, "action": "Monitor usage \u2014 check in if volume shifts", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $27,998. Annual run rate: $55,996. L3M avg/mo: $3,701."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165489ln16o", "name": "Citizens First Bank", "arr": 3578, "stage": "steady", "health": null, "action": "Monitor usage \u2014 check in if volume shifts", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $1,789. Annual run rate: $3,578. L3M avg/mo: $323."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165490xfzsb", "name": "CoFi Software", "arr": 134347, "stage": "expansion", "health": null, "action": "Develop expansion proposal \u2014 high volume, strong candidate for contract", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $67,173. Annual run rate: $134,347. L3M avg/mo: $10,286."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165491chmm6", "name": "Credit Union of Southern California", "arr": 85851, "stage": "expansion", "health": null, "action": "Develop expansion proposal \u2014 high volume, strong candidate for contract", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $42,926. Annual run rate: $85,851. L3M avg/mo: $6,815."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165492tzw0s", "name": "EASY STREET CAPITAL INVESTMENTS, LLC", "arr": 0, "stage": "steady", "health": null, "action": "Monitor \u2014 no recent orders, engage if opportunity surfaces", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $0. Annual run rate: $0. L3M avg/mo: $0."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165493smd2v", "name": "Fidelity Bancorp Funding, Inc", "arr": 105027, "stage": "steady", "health": null, "action": "Monitor usage \u2014 check in if volume shifts", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $52,514. Annual run rate: $105,027. L3M avg/mo: $6,694."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165494lf0ak", "name": "Financial Partners Credit Union", "arr": 83946, "stage": "steady", "health": null, "action": "Monitor usage \u2014 check in if volume shifts", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $41,973. Annual run rate: $83,946. L3M avg/mo: $6,314."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "17738541654953nc5n", "name": "First Foundation Bank", "arr": 28499, "stage": "steady", "health": null, "action": "Monitor usage \u2014 check in if volume shifts", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $14,249. Annual run rate: $28,499. L3M avg/mo: $1,451."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165498qvoja", "name": "GAP Managers", "arr": 0, "stage": "steady", "health": null, "action": "Monitor \u2014 no recent orders, engage if opportunity surfaces", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $0. Annual run rate: $0. L3M avg/mo: $0."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165499e03sg", "name": "Golden State Bank", "arr": 3531, "stage": "steady", "health": null, "action": "Monitor usage \u2014 check in if volume shifts", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $1,765. Annual run rate: $3,531. L3M avg/mo: $588."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165500vyi3s", "name": "Homestreet Bank", "arr": 0, "stage": "steady", "health": null, "action": "Monitor \u2014 no recent orders, engage if opportunity surfaces", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $0. Annual run rate: $0. L3M avg/mo: $0."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "17738541655012e3v1", "name": "Kinecta Federal Credit Union", "arr": 13912, "stage": "steady", "health": null, "action": "Monitor usage \u2014 check in if volume shifts", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $6,956. Annual run rate: $13,912. L3M avg/mo: $1,607."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "17738541655024r0tl", "name": "Logix Federal Credit Union", "arr": 56758, "stage": "steady", "health": null, "action": "Monitor usage \u2014 check in if volume shifts", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $28,379. Annual run rate: $56,758. L3M avg/mo: $2,933."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "17738541655034jcsy", "name": "Luther Burbank Savings", "arr": 0, "stage": "steady", "health": null, "action": "Monitor \u2014 no recent orders, engage if opportunity surfaces", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $0. Annual run rate: $0. L3M avg/mo: $0."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165504pgnr9", "name": "Marshland Credit Union", "arr": 20740, "stage": "steady", "health": null, "action": "Monitor usage \u2014 check in if volume shifts", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $10,370. Annual run rate: $20,740. L3M avg/mo: $1,526."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165505a7yte", "name": "OneUnited Bank", "arr": 22186, "stage": "steady", "health": null, "action": "Monitor usage \u2014 check in if volume shifts", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $11,093. Annual run rate: $22,186. L3M avg/mo: $3,698."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165506b9m3t", "name": "Premier America CU", "arr": 0, "stage": "steady", "health": null, "action": "Monitor \u2014 no recent orders, engage if opportunity surfaces", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $0. Annual run rate: $0. L3M avg/mo: $0."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165507rvrww", "name": "Private Mortgage Fund LLC", "arr": 69566, "stage": "steady", "health": null, "action": "Monitor usage \u2014 check in if volume shifts", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $34,783. Annual run rate: $69,566. L3M avg/mo: $5,828."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165508i7fr0", "name": "River City Bank", "arr": 0, "stage": "steady", "health": null, "action": "Monitor \u2014 no recent orders, engage if opportunity surfaces", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $0. Annual run rate: $0. L3M avg/mo: $0."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165510duz88", "name": "Solera National Bank", "arr": 22096, "stage": "steady", "health": null, "action": "Monitor usage \u2014 check in if volume shifts", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $11,048. Annual run rate: $22,096. L3M avg/mo: $2,151."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "17738541655115apw2", "name": "The Baptist Foundation of California", "arr": 0, "stage": "steady", "health": null, "action": "Monitor \u2014 no recent orders, engage if opportunity surfaces", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $0. Annual run rate: $0. L3M avg/mo: $0."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165513yrlvm", "name": "Umpqua Bank", "arr": 3531, "stage": "steady", "health": null, "action": "Monitor \u2014 no recent orders, engage if opportunity surfaces", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $1,765. Annual run rate: $3,531. L3M avg/mo: $0."}], "createdAt": "2026-03-18T00:00:00.000Z"}, {"id": "1773854165514x30jp", "name": "UNITED LEGACY, LLC", "arr": 0, "stage": "steady", "health": null, "action": "Monitor \u2014 no recent orders, engage if opportunity surfaces", "date": "2026-04-01", "contact": "", "products": "", "notes": [{"ts": "2026-03-18", "text": "L6M revenue: $0. Annual run rate: $0. L3M avg/mo: $0."}], "createdAt": "2026-03-18T00:00:00.000Z"}];
+
+var contracted = [];
+var ppu = [];
+var wins = [];
+var editId = null;
+var dragId = null;
+var curFilter = "all";
+var curBoard = "contracted"; // "contracted" or "ppu"
+
+var STAGES_CONTRACTED = {
+  renewal:    {label:"Renewal Due",     color:"#F5A623"},
+  atrisk:     {label:"At Risk",         color:"#E8445A"},
+  attention:  {label:"Needs Attention", color:"#F97316"},
+  expansion:  {label:"Expansion",       color:"#0057E7"},
+  onboarding: {label:"Onboarding",      color:"#0891B2"},
+  steady:     {label:"Steady State",    color:"#00BF63"},
+  inactive:   {label:"Inactive",        color:"#6B7A8D"}
+};
+
+var STAGES_PPU = {
+  attention:  {label:"Needs Attention", color:"#F97316"},
+  expansion:  {label:"Expansion",       color:"#0057E7"},
+  steady:     {label:"Steady State",    color:"#00BF63"}
+};
+
+function activeStages() { return curBoard === "contracted" ? STAGES_CONTRACTED : STAGES_PPU; }
+function activeAccounts() { return curBoard === "contracted" ? contracted : ppu; }
+
+function load() {
+  try {
+    var raw = localStorage.getItem("godocs_cs_v7");
+    if (raw) {
+      var p = JSON.parse(raw);
+      if (p && p.contracted && p.contracted.length > 0) {
+        contracted = p.contracted;
+        ppu = p.ppu || JSON.parse(JSON.stringify(SEED_PPU));
+        wins = p.wins || [];
+        return;
+      }
+    }
+  } catch(e) {}
+  contracted = JSON.parse(JSON.stringify(SEED_CONTRACTED));
+  ppu = JSON.parse(JSON.stringify(SEED_PPU));
+  wins = [];
+  save();
+}
+
+function save() {
+  localStorage.setItem("godocs_cs_v7", JSON.stringify({contracted: contracted, ppu: ppu, wins: wins}));
+}
+
+function switchBoard(b) {
+  curBoard = b;
+  curFilter = "all";
+  document.querySelectorAll(".fchip").forEach(function(c){c.classList.remove("active");});
+  document.querySelector(".fchip").classList.add("active");
+  document.getElementById("btog-contracted").classList.toggle("active", b==="contracted");
+  document.getElementById("btog-ppu").classList.toggle("active", b==="ppu");
+  // Show/hide contracted-only columns
+  document.getElementById("col-wrap-renewal").style.display   = b==="contracted"?"":"none";
+  document.getElementById("col-wrap-atrisk").style.display    = b==="contracted"?"":"none";
+  document.getElementById("col-wrap-onboarding").style.display= b==="contracted"?"":"none";
+  document.getElementById("col-wrap-inactive").style.display  = b==="contracted"?"":"none";
+  // Update header label
+  document.getElementById("board-label").textContent = b==="contracted" ? "Contracted Accounts" : "Pay-Per-Use Accounts";
+  var tag=document.getElementById("board-tag");
+  tag.textContent=b==="contracted"?"CONTRACT":"PAY-PER-USE";
+  tag.className="blabel-tag "+(b==="contracted"?"contracted":"ppu");
+  renderBoard();
+}
+
+function isOD(d) {
+  if (!d) return false;
+  var t = new Date(); t.setHours(0,0,0,0);
+  return new Date(d+"T00:00:00") < t;
+}
+function isTW(d) {
+  if (!d) return false;
+  var dt = new Date(d+"T00:00:00");
+  var t = new Date(); t.setHours(0,0,0,0);
+  var wk = new Date(t); wk.setDate(t.getDate()+7);
+  return dt >= t && dt <= wk;
+}
+function fmtD(d) {
+  if (!d) return " - ";
+  return new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"});
+}
+function fmtA(n) {
+  if (!n) return "0";
+  if (n >= 1000000) return (n/1000000).toFixed(1)+"M";
+  if (n >= 1000) return Math.round(n/1000)+"k";
+  return String(n);
+}
+function esc(s) {
+  return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+function toast(msg) {
+  var ex=document.querySelector(".toast"); if(ex) ex.remove();
+  var t=document.createElement("div"); t.className="toast"; t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.style.opacity="0"; t.style.transition="opacity 0.3s"; setTimeout(function(){t.remove();},300); },2200);
+}
+
+function renderBoard() {
+  var q = (document.getElementById("srch").value||"").toLowerCase();
+  var accs = activeAccounts();
+  var stages = Object.keys(activeStages());
+  var totals = {};
+  stages.forEach(function(s){ var el=document.getElementById("cards-"+s); if(el) el.innerHTML=""; totals[s]={count:0,arr:0}; });
+
+  var filtered = accs.filter(function(a) {
+    if (q && a.name.toLowerCase().indexOf(q)<0 && (a.action||"").toLowerCase().indexOf(q)<0) return false;
+    if (curFilter==="overdue")    return isOD(a.date);
+    if (curFilter==="week")       return isTW(a.date);
+    if (curFilter==="big")        return (a.arr||0)>=50000;
+    if (curFilter==="onboarding") return a.stage==="onboarding";
+    if (curFilter==="attention")  return a.stage==="attention";
+    return true;
+  });
+
+  var totalArr=0, riskCnt=0, renCnt=0, obCnt=0, attCnt=0;
+  filtered.forEach(function(a) {
+    var el=document.getElementById("cards-"+a.stage);
+    if (!el) return;
+    el.appendChild(buildCard(a));
+    totals[a.stage].count++;
+    totals[a.stage].arr+=(a.arr||0);
+    totalArr+=(a.arr||0);
+    if (a.stage==="atrisk") riskCnt++;
+    if (a.stage==="renewal") renCnt++;
+    if (a.stage==="onboarding") obCnt++;
+    if (a.stage==="attention") attCnt++;
+  });
+
+  stages.forEach(function(s){
+    var cel=document.getElementById("c-"+s); if(cel) cel.textContent=totals[s].count;
+    var ael=document.getElementById("a-"+s); if(ael) ael.textContent=totals[s].arr>0?"$"+fmtA(totals[s].arr):"";
+    var el=document.getElementById("cards-"+s);
+    if (el && !filtered.filter(function(a){return a.stage===s;}).length)
+      el.innerHTML="<div class=\"empty-drop\">Drop here</div>";
+  });
+
+  document.getElementById("s-acc").textContent=accs.length;
+  document.getElementById("s-arr").textContent="$"+fmtA(totalArr);
+  document.getElementById("s-risk").textContent= curBoard==="contracted" ? riskCnt : attCnt;
+  document.getElementById("s-risk-lbl").textContent= curBoard==="contracted" ? "At Risk" : "Needs Attn";
+  document.getElementById("s-ren").textContent= curBoard==="contracted" ? renCnt : "";
+  document.getElementById("s-ren-wrap").style.display= curBoard==="contracted" ? "" : "none";
+  document.getElementById("s-ob").textContent= curBoard==="contracted" ? obCnt : "";
+  document.getElementById("s-ob-wrap").style.display= curBoard==="contracted" ? "" : "none";
+  renderTable(filtered);
+  updateIntel();
+  fillAccDrop();
+}
+
+function buildCard(a) {
+  var div=document.createElement("div");
+  div.className="card"; div.draggable=true;
+  div.addEventListener("dragstart",function(e){dragId=a.id;div.classList.add("dragging");e.dataTransfer.effectAllowed="move";});
+  div.addEventListener("dragend",function(){div.classList.remove("dragging");});
+  div.addEventListener("click",function(){openCard(a.id);});
+  var dc=isOD(a.date)?"od":isTW(a.date)?"soon":"ok";
+  var di=isOD(a.date)?"&#9888;":"&#9719;";
+  var badges="";
+  if ((a.notes||[]).length>0) badges+="<span class=\"bdg bdg-n\">notes</span>";
+  if (isOD(a.date)) badges+="<span class=\"bdg bdg-h\">overdue</span>";
+  if ((a.health||5)<=2) badges+="<span class=\"bdg bdg-a\">low health</span>";
+  if (a.stage==="expansion") badges+="<span class=\"bdg bdg-e\">&uarr; expand</span>";
+  if (a.stage==="onboarding") badges+="<span class=\"bdg bdg-ob\">onboarding</span>";
+  if (curBoard==="ppu") badges+="<span class=\"bdg bdg-ppu\">pay-per-use</span>";
+  // util badges
+  if (a.util) {
+    if (a.util.status==="overage") badges+="<span class=\"bdg bdg-ov\">overage</span>";
+    else if (a.util.status==="fast") badges+="<span class=\"bdg bdg-fast\">&uarr; pace</span>";
+    else if (a.util.status==="slow") badges+="<span class=\"bdg bdg-slow\">&darr; pace</span>";
+  }
+  div.innerHTML=
+    "<div class=\"ctop\"><div class=\"cname\">"+esc(a.name)+"</div>"+(a.arr?"<div class=\"carr2\">$"+fmtA(a.arr)+"</div>":"")+"</div>"+
+    (a.action?"<div class=\"calbl\">Next Action</div><div class=\"caval\">"+esc(a.action)+"</div>":"")+
+    "<div class=\"cdrow\"><div class=\"cdate "+dc+"\">"+di+" "+fmtD(a.date)+"</div><div class=\"cbadges\">"+badges+"</div></div>"+
+    (curBoard==="contracted"&&a.util?renderUtilBar(a.util):"");
+  return div;
+}
+
+function renderTable(filtered) {
+  var tbody=document.getElementById("tbl-body"); tbody.innerHTML="";
+  var stages=activeStages();
+  filtered.forEach(function(a){
+    var tr=document.createElement("tr"); tr.onclick=function(){openCard(a.id);};
+    var h=a.health||" - ";
+    var hc=h<=2?"#C8182E":h<=3?"#C47800":"#00963E";
+    tr.innerHTML=
+      "<td style=\"font-family:'Syne',sans-serif;font-weight:700;\">"+esc(a.name)+"</td>"+
+      "<td style=\"font-family:'DM Mono',monospace;color:#00963E;\">"+(a.arr?"$"+fmtA(a.arr):" - ")+"</td>"+
+      "<td><span class=\"spill s-"+a.stage+"\">"+stages[a.stage].label+"</span></td>"+
+      "<td style=\"color:#4A5F78;max-width:200px;\">"+esc(a.action||" - ")+"</td>"+
+      "<td style=\"font-family:'DM Mono',monospace;font-size:10px;color:"+(isOD(a.date)?"#C8182E":"#8496AB")+";\">"+fmtD(a.date)+"</td>"+
+      "<td style=\"font-family:'DM Mono',monospace;color:"+hc+"\">"+h+"/5</td>";
+    tbody.appendChild(tr);
+  });
+}
+
+function updateIntel() {
+  var accs=activeAccounts(), alerts=[];
+  accs.forEach(function(a){
+    if (isOD(a.date)&&a.stage!=="inactive") alerts.push({t:"danger",m:a.name.split(" ")[0]+"  -  action overdue"});
+    if (a.stage==="atrisk") alerts.push({t:"danger",m:"At-risk: "+a.name.split(" ")[0]});
+    if (a.util&&a.util.status==="overage"&&a.stage!=="expansion") alerts.push({t:"opp",m:"Overage: "+a.name.split(" ")[0]});
+    if (a.util&&a.util.status==="slow") alerts.push({t:"warn",m:"Low usage: "+a.name.split(" ")[0]});
+    if (a.stage==="attention"&&curBoard==="ppu") alerts.push({t:"warn",m:"No orders: "+a.name.split(" ")[0]});
+    if (a.stage==="renewal"&&isTW(a.date)) alerts.push({t:"warn",m:"Renewal this week: "+a.name.split(" ")[0]});
+    if (a.stage==="expansion") alerts.push({t:"opp",m:(curBoard==="ppu"?"Converting: ":"Expand: ")+a.name.split(" ")[0]});
+    if ((a.health||5)<=2) alerts.push({t:"warn",m:"Low health: "+a.name.split(" ")[0]});
+  });
+  if (curBoard==="contracted") {
+    var rArr=accs.filter(function(a){return a.stage==="renewal";}).reduce(function(s,a){return s+(a.arr||0);},0);
+    if (rArr>0) alerts.push({t:"info",m:"$"+fmtA(rArr)+" renewal ARR in queue"});
+  } else {
+    var expArr=accs.filter(function(a){return a.stage==="expansion";}).reduce(function(s,a){return s+(a.arr||0);},0);
+    if (expArr>0) alerts.push({t:"opp",m:"$"+fmtA(expArr)+" conversion ARR"});
+    var zeroCount=accs.filter(function(a){return a.stage==="attention";}).length;
+    if (zeroCount>0) alerts.push({t:"warn",m:zeroCount+" accounts with no recent orders"});
+  }
+  var el=document.getElementById("i-alerts");
+  if (!alerts.length){el.innerHTML="<span class=\"ichip info\">All accounts on track &#10003;</span>";return;}
+  el.innerHTML=alerts.slice(0,7).map(function(a){return "<span class=\"ichip "+a.t+"\">"+esc(a.m)+"</span>";}).join("");
+}
+
+function setFilter(f,btn){
+  curFilter=f;
+  document.querySelectorAll(".fchip").forEach(function(c){c.classList.remove("active");});
+  btn.classList.add("active"); renderBoard();
+}
+function setView(v){
+  document.getElementById("board-view").style.display=v==="board"?"flex":"none";
+  document.getElementById("table-view").style.display=v==="table"?"block":"none";
+  document.getElementById("vb-board").classList.toggle("active",v==="board");
+  document.getElementById("vb-table").classList.toggle("active",v==="table");
+}
+function onDO(e){e.preventDefault();e.dataTransfer.dropEffect="move";}
+function onDrop(e,stage){
+  e.preventDefault(); if(!dragId) return;
+  var accs=activeAccounts();
+  var idx=accs.findIndex(function(a){return a.id===dragId;});
+  if(idx>-1){accs[idx].stage=stage;save();renderBoard();toast("Moved to "+activeStages()[stage].label);}
+  dragId=null;
+}
+
+function openNew(stage){
+  editId=null; resetModal();
+  if(stage) document.getElementById("f-stage").value=stage;
+  updMStage();
+  document.getElementById("btn-del").style.display="none";
+  document.getElementById("moverlay").classList.add("open");
+  document.getElementById("f-name").focus();
+}
+function openCard(id){
+  editId=id;
+  var accs=activeAccounts();
+  var a=accs.find(function(x){return x.id===id;}); if(!a) return;
+  document.getElementById("f-name").value=a.name||"";
+  document.getElementById("f-arr").value=a.arr||"";
+  document.getElementById("f-stage").value=a.stage||"steady";
+  document.getElementById("f-health").value=a.health||"";
+  document.getElementById("f-action").value=a.action||"";
+  document.getElementById("f-date").value=a.date||"";
+  document.getElementById("f-contact").value=a.contact||"";
+  document.getElementById("f-products").value=a.products||"";
+  document.getElementById("f-note").value="";
+  document.getElementById("m-name").textContent=a.name||"Account";
+  document.getElementById("btn-del").style.display="inline-flex";
+  // Populate stage dropdown with correct options for current board
+  populateStageSelect(a.stage);
+  updMStage(); showNotes(a.notes||[]);
+  document.getElementById("moverlay").classList.add("open");
+}
+function populateStageSelect(selected) {
+  var sel=document.getElementById("f-stage");
+  sel.innerHTML="";
+  var stages=activeStages();
+  Object.keys(stages).forEach(function(k){
+    var o=document.createElement("option"); o.value=k; o.textContent=stages[k].label;
+    if(k===selected) o.selected=true;
+    sel.appendChild(o);
+  });
+}
+function resetModal(){
+  ["f-name","f-arr","f-health","f-action","f-date","f-contact","f-products","f-note"].forEach(function(id){document.getElementById(id).value="";});
+  populateStageSelect("steady");
+  document.getElementById("m-name").textContent="New Account";
+  document.getElementById("nhg").style.display="none";
+  document.getElementById("nhist").innerHTML="";
+}
+function closeModal(){document.getElementById("moverlay").classList.remove("open");editId=null;}
+function handleOC(e){if(e.target===document.getElementById("moverlay"))closeModal();}
+function updMName(){document.getElementById("m-name").textContent=document.getElementById("f-name").value.trim()||"New Account";}
+function updMStage(){
+  var s=document.getElementById("f-stage").value, stages=activeStages(), cfg=stages[s]||{label:"",color:"#999"};
+  document.getElementById("m-dot").style.background=cfg.color;
+  document.getElementById("m-stag").textContent=cfg.label;
+  document.getElementById("m-stag").style.color=cfg.color;
+}
+function showNotes(notes){
+  var g=document.getElementById("nhg");
+  if(!notes||!notes.length){g.style.display="none";return;}
+  g.style.display="flex";
+  document.getElementById("nhist").innerHTML=notes.slice().reverse().map(function(n){
+    return "<div class=\"nentry\"><div class=\"nts\">"+esc(n.ts)+"</div>"+esc(n.text)+"</div>";
+  }).join("");
+}
+function saveCard(){
+  var name=document.getElementById("f-name").value.trim();
+  if(!name){toast("Account name is required");return;}
+  var note=document.getElementById("f-note").value.trim();
+  var today=new Date().toISOString().split("T")[0];
+  var accs=activeAccounts();
+  if(editId){
+    var idx=accs.findIndex(function(a){return a.id===editId;});
+    if(idx>-1){
+      if(note){accs[idx].notes=accs[idx].notes||[];accs[idx].notes.push({ts:today,text:note});}
+      accs[idx].name=name;
+      accs[idx].arr=parseFloat(document.getElementById("f-arr").value)||0;
+      accs[idx].stage=document.getElementById("f-stage").value;
+      accs[idx].health=parseInt(document.getElementById("f-health").value)||null;
+      accs[idx].action=document.getElementById("f-action").value.trim();
+      accs[idx].date=document.getElementById("f-date").value;
+      accs[idx].contact=document.getElementById("f-contact").value.trim();
+      accs[idx].products=document.getElementById("f-products").value.trim();
+    }
+  } else {
+    accs.push({id:uid(),name:name,
+      arr:parseFloat(document.getElementById("f-arr").value)||0,
+      stage:document.getElementById("f-stage").value,
+      health:parseInt(document.getElementById("f-health").value)||null,
+      action:document.getElementById("f-action").value.trim(),
+      date:document.getElementById("f-date").value,
+      contact:document.getElementById("f-contact").value.trim(),
+      products:document.getElementById("f-products").value.trim(),
+      notes:note?[{ts:today,text:note}]:[],
+      createdAt:new Date().toISOString()});
+  }
+  save();renderBoard();closeModal();toast("Account saved");
+}
+function delCard(){
+  if(!editId) return;
+  var accs=activeAccounts();
+  var a=accs.find(function(x){return x.id===editId;});
+  if(!confirm("Delete "+((a&&a.name)||"this account")+"?")) return;
+  if(curBoard==="contracted") contracted=contracted.filter(function(x){return x.id!==editId;});
+  else ppu=ppu.filter(function(x){return x.id!==editId;});
+  save();renderBoard();closeModal();toast("Deleted");
+}
+
+function openPerf(){fillAccDrop();renderWins();document.getElementById("lf-date").value=new Date().toISOString().split("T")[0];document.getElementById("psb").classList.add("open");document.getElementById("pov").classList.add("open");}
+function closePerf(){document.getElementById("psb").classList.remove("open");document.getElementById("pov").classList.remove("open");}
+function fillAccDrop(){
+  var sel=document.getElementById("lf-acc"),cur=sel.value;
+  sel.innerHTML="<option value=\"\">Select account...</option>";
+  var all=contracted.concat(ppu).sort(function(a,b){return a.name.localeCompare(b.name);});
+  all.forEach(function(a){
+    var o=document.createElement("option");o.value=a.name;o.textContent=a.name;sel.appendChild(o);
+  });
+  if(cur) sel.value=cur;
+}
+function logWin(){
+  var acc=document.getElementById("lf-acc").value,type=document.getElementById("lf-type").value;
+  var arr=parseFloat(document.getElementById("lf-arr").value)||0;
+  var date=document.getElementById("lf-date").value||new Date().toISOString().split("T")[0];
+  var note=document.getElementById("lf-note").value.trim();
+  if(!acc){toast("Select an account");return;}
+  wins.unshift({id:uid(),account:acc,type:type,arr:arr,date:date,note:note});
+  save();renderWins();
+  document.getElementById("lf-acc").value="";document.getElementById("lf-arr").value="";document.getElementById("lf-note").value="";
+  toast("Win logged");
+}
+function delWin(id){wins=wins.filter(function(w){return w.id!==id;});save();renderWins();}
+function renderWins(){
+  var sv=wins.filter(function(w){return w.type==="saved";}).reduce(function(s,w){return s+w.arr;},0);
+  var ex=wins.filter(function(w){return w.type==="expansion";}).reduce(function(s,w){return s+w.arr;},0);
+  var rn=wins.filter(function(w){return w.type==="renewal";}).length;
+  document.getElementById("ps-sv").textContent="$"+fmtA(sv);
+  document.getElementById("ps-ex").textContent="$"+fmtA(ex);
+  document.getElementById("ps-rn").textContent=rn;
+  document.getElementById("wc").textContent=wins.length?wins.length+" entries":"";
+  var list=document.getElementById("wlist");
+  if(!wins.length){list.innerHTML="<div class=\"empty-log\">No wins logged yet.<br>Every churn save and expansion counts.</div>";return;}
+  list.innerHTML=wins.map(function(w){
+    var lbl=w.type==="saved"?"Revenue Saved":w.type==="expansion"?"Expansion ARR":"Renewal";
+    return "<div class=\"wentry "+w.type+"\">"+
+      "<div class=\"wtop\"><div class=\"wacc\">"+esc(w.account)+"</div><div class=\"warr\">"+(w.arr?"$"+fmtA(w.arr):" - ")+"</div></div>"+
+      "<div class=\"wmeta\"><span class=\"wtype "+w.type+"\">"+lbl+"</span><span class=\"wdate\">"+fmtD(w.date)+"</span></div>"+
+      (w.note?"<div class=\"wnote\">"+esc(w.note)+"</div>":"")+
+      "<button class=\"wdel\" onclick=\"delWin('"+w.id+"')\" title=\"Remove\">&#10005;</button>"+
+      "</div>";
+  }).join("");
+}
+function doExport(){
+  var accs=activeAccounts(), stages=activeStages();
+  var rows=[["Account","ARR","Stage","Health","Next Action","Next Date","Contact","Products"]];
+  accs.forEach(function(a){rows.push([a.name,a.arr||"",stages[a.stage].label,a.health||"",a.action||"",a.date||"",a.contact||"",a.products||""]);});
+  var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+  var el=document.createElement("a");el.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  el.download="GoDocs_CS_"+(curBoard==="ppu"?"PPU_":"")+ new Date().toISOString().split("T")[0]+".csv";el.click();toast("Exported");
+}
+document.addEventListener("keydown",function(e){
+  if(e.key==="Escape"){closeModal();closePerf();}
+  if((e.metaKey||e.ctrlKey)&&e.key==="n"){e.preventDefault();openNew();}
+  if((e.metaKey||e.ctrlKey)&&e.key==="Enter"){if(document.getElementById("moverlay").classList.contains("open"))saveCard();}
+});
+function exportExec() {
+  var snap = buildExecSnapshot();
+  var blob = new Blob([snap], {type:"text/html"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "GoDocs_CS_ExecView_" + new Date().toISOString().split("T")[0] + ".html";
+  a.click();
+  toast("Exec view exported");
+}
+
+function buildExecSnapshot() {
+  var today = new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
+
+  // Metrics
+  var totalArr     = contracted.reduce(function(s,a){return s+(a.arr||0);},0);
+  var atRiskArr    = contracted.filter(function(a){return a.stage==="atrisk";}).reduce(function(s,a){return s+(a.arr||0);},0);
+  var atRiskCount  = contracted.filter(function(a){return a.stage==="atrisk";}).length;
+  var renewalArr   = contracted.filter(function(a){return a.stage==="renewal";}).reduce(function(s,a){return s+(a.arr||0);},0);
+  var renewalCount = contracted.filter(function(a){return a.stage==="renewal";}).length;
+  var expansionArr = contracted.filter(function(a){return a.stage==="expansion";}).reduce(function(s,a){return s+(a.arr||0);},0);
+  var expansionCount = contracted.filter(function(a){return a.stage==="expansion";}).length;
+  var svArr = wins.filter(function(w){return w.type==="saved";}).reduce(function(s,w){return s+w.arr;},0);
+  var exArr = wins.filter(function(w){return w.type==="expansion";}).reduce(function(s,w){return s+w.arr;},0);
+  var rnCount = wins.filter(function(w){return w.type==="renewal";}).length;
+
+  // Util signals
+  var overageAccts = contracted.filter(function(a){return a.util&&a.util.status==="overage";});
+  var fastAccts    = contracted.filter(function(a){return a.util&&a.util.status==="fast";});
+  var slowAccts    = contracted.filter(function(a){return a.util&&a.util.status==="slow";});
+  var hasUtil      = contracted.some(function(a){return a.util;});
+
+  // Build a card HTML string
+  function card(a, borderColor, stageLabel) {
+    var dc = isOD(a.date) ? "color:#C8182E" : isTW(a.date) ? "color:#C47800" : "color:#8496AB";
+    var di = isOD(a.date) ? "&#9888;" : "&#9719;";
+    var util = "";
+    if (a.util) {
+      var pct = Math.min(a.util.currPct||0, 150);
+      var target = a.util.onTrackPct||0;
+      var bc = a.util.status==="overage"?"#C8182E":a.util.status==="fast"?"#F97316":a.util.status==="slow"?"#C47800":"#00963E";
+      var lbl = a.util.status==="overage"?"OVERAGE":a.util.status==="fast"?"AHEAD":a.util.status==="slow"?"BEHIND":"ON TRACK";
+      util = "<div style=\"margin-top:6px;padding-top:6px;border-top:1px solid rgba(14,31,52,0.07);\">" +
+        "<div style=\"display:flex;justify-content:space-between;margin-bottom:3px;\">" +
+        "<span style=\"font-family:'DM Mono',monospace;font-size:9px;color:#8496AB;text-transform:uppercase;\">Subscription</span>" +
+        "<span style=\"font-family:'DM Mono',monospace;font-size:10px;font-weight:600;color:"+bc+";\">"+Math.round(a.util.currPct||0)+"%  -  "+lbl+"</span>" +
+        "</div>" +
+        "<div style=\"background:rgba(14,31,52,0.07);border-radius:4px;height:5px;position:relative;overflow:hidden;\">" +
+        "<div style=\"width:"+Math.min(pct,100)+"%;height:100%;background:"+bc+";border-radius:4px;\"></div>" +
+        (target>0?"<div style=\"position:absolute;top:-2px;left:"+Math.min(target,100)+"%;width:2px;height:9px;background:rgba(14,31,52,0.3);\"></div>":"") +
+        "</div></div>";
+    }
+    return "<div style=\"background:#fff;border:1px solid rgba(14,31,52,0.08);border-left:3px solid "+borderColor+";border-radius:8px;padding:12px;margin-bottom:8px;\">" +
+      "<div style=\"display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;\">" +
+      "<div style=\"font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#0E1F34;flex:1;\">"+esc(a.name)+"</div>" +
+      (a.arr?"<div style=\"font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:#00963E;margin-left:8px;\">$"+fmtA(a.arr)+"</div>":"") +
+      "</div>" +
+      (a.action?"<div style=\"font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;color:#8496AB;margin-bottom:2px;\">Next Action</div><div style=\"font-size:11.5px;color:#4A5F78;margin-bottom:6px;\">"+esc(a.action)+"</div>":"") +
+      "<div style=\"display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid rgba(14,31,52,0.08);\"><div style=\"font-family:'DM Mono',monospace;font-size:10px;"+dc+"\">"+di+" "+fmtD(a.date)+"</div></div>" +
+      util +
+      "</div>";
+  }
+
+  // Build column HTML
+  function buildCol(accs, stage, label, titleColor, dotColor, bgColor, borderColor, leftColor) {
+    var items = accs.filter(function(a){return a.stage===stage;});
+    var colArr = items.reduce(function(s,a){return s+(a.arr||0);},0);
+    var cards = items.map(function(a){return card(a, leftColor, label);}).join("");
+    return "<div style=\"flex:0 0 240px;\">" +
+      "<div style=\"padding:9px 12px;display:flex;align-items:center;justify-content:space-between;border-radius:8px;margin-bottom:8px;background:"+bgColor+";border:1px solid "+borderColor+";\">" +
+      "<div style=\"display:flex;align-items:center;gap:7px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:"+titleColor+";\">" +
+      "<div style=\"width:8px;height:8px;border-radius:50%;background:"+dotColor+"\"></div>"+label+"</div>" +
+      "<span style=\"font-family:'DM Mono',monospace;font-size:11px;color:#4A5F78;font-weight:500;\">"+items.length+(colArr>0?" &nbsp;<span style='color:#8496AB;font-size:10px;'>$"+fmtA(colArr)+"</span>":"")+"</span>" +
+      "</div>" +
+      (cards||"<div style=\"border:1px dashed rgba(14,31,52,0.13);border-radius:8px;padding:14px;text-align:center;color:#8496AB;font-size:11px;font-style:italic;\"> - </div>") +
+      "</div>";
+  }
+
+  var cCols =
+    buildCol(contracted,"renewal","Renewal Due","#C47800","#F5A623","rgba(196,120,0,0.07)","rgba(196,120,0,0.15)","#F5A623") +
+    buildCol(contracted,"atrisk","At Risk","#C8182E","#E8445A","rgba(200,24,46,0.06)","rgba(200,24,46,0.14)","#E8445A") +
+    buildCol(contracted,"attention","Needs Attention","#EA580C","#F97316","rgba(249,115,22,0.06)","rgba(249,115,22,0.15)","#F97316") +
+    buildCol(contracted,"expansion","Expansion","#0057E7","#0057E7","rgba(0,87,231,0.06)","rgba(0,87,231,0.14)","#0057E7") +
+    buildCol(contracted,"onboarding","Onboarding","#0891B2","#0891B2","rgba(8,145,178,0.06)","rgba(8,145,178,0.14)","#0891B2") +
+    buildCol(contracted,"steady","Steady State","#00963E","#00BF63","rgba(0,150,62,0.06)","rgba(0,150,62,0.14)","#00BF63") +
+    buildCol(contracted,"inactive","Inactive","#6B7A8D","#6B7A8D","rgba(107,122,141,0.06)","rgba(107,122,141,0.14)","#6B7A8D");
+
+  var pCols =
+    buildCol(ppu,"attention","Needs Attention","#EA580C","#F97316","rgba(249,115,22,0.06)","rgba(249,115,22,0.15)","#F97316") +
+    buildCol(ppu,"expansion","Expansion","#0057E7","#0057E7","rgba(0,87,231,0.06)","rgba(0,87,231,0.14)","#0057E7") +
+    buildCol(ppu,"steady","Steady State","#00963E","#00BF63","rgba(0,150,62,0.06)","rgba(0,150,62,0.14)","#00BF63");
+
+  // Win log rows
+  var winRows = wins.slice(0,10).map(function(w){
+    var lbl = w.type==="saved"?"Revenue Saved":w.type==="expansion"?"Expansion ARR":"Renewal";
+    var col = w.type==="saved"?"#00963E":w.type==="expansion"?"#0057E7":"#C47800";
+    var bg  = w.type==="saved"?"rgba(0,150,62,0.09)":w.type==="expansion"?"rgba(0,87,231,0.08)":"rgba(196,120,0,0.09)";
+    return "<tr>" +
+      "<td style=\"padding:8px 12px;border-bottom:1px solid rgba(14,31,52,0.07);font-family:'Syne',sans-serif;font-weight:700;font-size:12px;\">"+esc(w.account)+"</td>" +
+      "<td style=\"padding:8px 12px;border-bottom:1px solid rgba(14,31,52,0.07);font-family:'DM Mono',monospace;font-size:11px;color:"+col+";\">$"+fmtA(w.arr)+"</td>" +
+      "<td style=\"padding:8px 12px;border-bottom:1px solid rgba(14,31,52,0.07);\"><span style=\"font-family:'DM Mono',monospace;font-size:9px;padding:2px 6px;border-radius:10px;font-weight:600;text-transform:uppercase;background:"+bg+";color:"+col+"\">"+lbl+"</span></td>" +
+      "<td style=\"padding:8px 12px;border-bottom:1px solid rgba(14,31,52,0.07);font-family:'DM Mono',monospace;font-size:10px;color:#8496AB;\">"+fmtD(w.date)+"</td>" +
+      "<td style=\"padding:8px 12px;border-bottom:1px solid rgba(14,31,52,0.07);font-size:11px;color:#4A5F78;\">"+esc(w.note||"")+"</td>" +
+      "</tr>";
+  }).join("");
+
+  // Util section
+  var utilHtml = "";
+  if (hasUtil) {
+    utilHtml =
+      "<div style=\"margin-bottom:16px;\">" +
+      "<div style=\"font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#0E1F34;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;\">Subscription Utilization</div>" +
+      "<div style=\"display:grid;grid-template-columns:repeat(3,1fr);gap:10px;\">" +
+      "<div style=\"background:#fff;border:1px solid rgba(200,24,46,0.15);border-radius:10px;padding:12px;text-align:center;\">" +
+      "<div style=\"font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#C8182E;\">"+overageAccts.length+"</div>" +
+      "<div style=\"font-family:'DM Mono',monospace;font-size:8px;text-transform:uppercase;color:#8496AB;margin-top:3px;\">In Overage</div>" +
+      "<div style=\"font-size:11px;color:#4A5F78;margin-top:4px;\">"+overageAccts.map(function(a){return esc(a.name);}).join(", ")+"</div>" +
+      "</div>" +
+      "<div style=\"background:#fff;border:1px solid rgba(249,115,22,0.15);border-radius:10px;padding:12px;text-align:center;\">" +
+      "<div style=\"font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#EA580C;\">"+fastAccts.length+"</div>" +
+      "<div style=\"font-family:'DM Mono',monospace;font-size:8px;text-transform:uppercase;color:#8496AB;margin-top:3px;\">Ahead of Pace</div>" +
+      "<div style=\"font-size:11px;color:#4A5F78;margin-top:4px;\">"+fastAccts.map(function(a){return esc(a.name);}).join(", ")+"</div>" +
+      "</div>" +
+      "<div style=\"background:#fff;border:1px solid rgba(196,120,0,0.15);border-radius:10px;padding:12px;text-align:center;\">" +
+      "<div style=\"font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#C47800;\">"+slowAccts.length+"</div>" +
+      "<div style=\"font-family:'DM Mono',monospace;font-size:8px;text-transform:uppercase;color:#8496AB;margin-top:3px;\">Behind Pace</div>" +
+      "<div style=\"font-size:11px;color:#4A5F78;margin-top:4px;\">"+slowAccts.map(function(a){return esc(a.name);}).join(", ")+"</div>" +
+      "</div>" +
+      "</div></div>";
+  }
+
+  // Win log section
+  var winHtml = "";
+  if (wins.length > 0) {
+    winHtml =
+      "<div style=\"margin-bottom:6px;\"><div style=\"font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#0E1F34;text-transform:uppercase;letter-spacing:0.07em;\">Win Log  -  YTD</div></div>" +
+      "<div style=\"background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(14,31,52,0.07);margin-bottom:24px;\">" +
+      "<table style=\"width:100%;border-collapse:collapse;\">" +
+      "<thead><tr>" +
+      "<th style=\"font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;color:#8496AB;padding:10px 12px;text-align:left;border-bottom:1px solid rgba(14,31,52,0.08);background:#EAEEF5;\">Account</th>" +
+      "<th style=\"font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;color:#8496AB;padding:10px 12px;text-align:left;border-bottom:1px solid rgba(14,31,52,0.08);background:#EAEEF5;\">Amount</th>" +
+      "<th style=\"font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;color:#8496AB;padding:10px 12px;text-align:left;border-bottom:1px solid rgba(14,31,52,0.08);background:#EAEEF5;\">Type</th>" +
+      "<th style=\"font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;color:#8496AB;padding:10px 12px;text-align:left;border-bottom:1px solid rgba(14,31,52,0.08);background:#EAEEF5;\">Date</th>" +
+      "<th style=\"font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;color:#8496AB;padding:10px 12px;text-align:left;border-bottom:1px solid rgba(14,31,52,0.08);background:#EAEEF5;\">Notes</th>" +
+      "</tr></thead><tbody>"+winRows+"</tbody></table></div>";
+  }
+
+  var metricsHtml =
+    "<div style=\"display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px;\">" +
+    "<div style=\"background:#fff;border:1px solid rgba(14,31,52,0.08);border-radius:10px;padding:14px 12px;text-align:center;\">" +
+    "<div style=\"font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#0E1F34;\">$"+fmtA(totalArr)+"</div>" +
+    "<div style=\"font-family:'DM Mono',monospace;font-size:8px;text-transform:uppercase;color:#8496AB;margin-top:4px;\">Contracted ARR</div></div>" +
+    "<div style=\"background:#fff;border:1px solid rgba(200,24,46,0.15);border-radius:10px;padding:14px 12px;text-align:center;\">" +
+    "<div style=\"font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#C8182E;\">$"+fmtA(atRiskArr)+"</div>" +
+    "<div style=\"font-family:'DM Mono',monospace;font-size:8px;text-transform:uppercase;color:#8496AB;margin-top:4px;\">At-Risk ARR ("+atRiskCount+")</div></div>" +
+    "<div style=\"background:#fff;border:1px solid rgba(196,120,0,0.15);border-radius:10px;padding:14px 12px;text-align:center;\">" +
+    "<div style=\"font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#C47800;\">$"+fmtA(renewalArr)+"</div>" +
+    "<div style=\"font-family:'DM Mono',monospace;font-size:8px;text-transform:uppercase;color:#8496AB;margin-top:4px;\">Renewal Pipeline ("+renewalCount+")</div></div>" +
+    "<div style=\"background:#fff;border:1px solid rgba(0,87,231,0.14);border-radius:10px;padding:14px 12px;text-align:center;\">" +
+    "<div style=\"font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#0057E7;\">$"+fmtA(expansionArr)+"</div>" +
+    "<div style=\"font-family:'DM Mono',monospace;font-size:8px;text-transform:uppercase;color:#8496AB;margin-top:4px;\">Expansion Pipeline ("+expansionCount+")</div></div>" +
+    "<div style=\"background:#fff;border:1px solid rgba(0,150,62,0.14);border-radius:10px;padding:14px 12px;text-align:center;\">" +
+    "<div style=\"font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#00963E;\">$"+fmtA(svArr)+"</div>" +
+    "<div style=\"font-family:'DM Mono',monospace;font-size:8px;text-transform:uppercase;color:#8496AB;margin-top:4px;\">Revenue Saved YTD</div></div>" +
+    "<div style=\"background:#fff;border:1px solid rgba(0,87,231,0.14);border-radius:10px;padding:14px 12px;text-align:center;\">" +
+    "<div style=\"font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#0057E7;\">$"+fmtA(exArr)+"</div>" +
+    "<div style=\"font-family:'DM Mono',monospace;font-size:8px;text-transform:uppercase;color:#8496AB;margin-top:4px;\">Expansion Closed YTD</div></div>" +
+    "</div>";
+
+  return "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\">" +
+    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+    "<title>GoDocs CS  -  Exec View "+today+"</title>" +
+    "<link href=\"https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap\" rel=\"stylesheet\">" +
+    "</head><body style=\"background:#F4F6FA;color:#0E1F34;font-family:'DM Sans',sans-serif;font-size:13px;margin:0;padding:0;\">" +
+    "<div style=\"background:#0E1F34;padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;\">" +
+    "<div style=\"display:flex;align-items:center;gap:16px;\">" +
+    "<div style=\"font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#fff;\">Go<span style=\"color:#4A9FFF;\">Docs</span></div>" +
+    "<div style=\"width:1px;height:18px;background:rgba(255,255,255,0.15);\"></div>" +
+    "<div style=\"font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:0.08em;text-transform:uppercase;\">CS Executive View</div>" +
+    "</div>" +
+    "<div style=\"font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.38);\">"+today+"</div>" +
+    "</div>" +
+    "<div style=\"padding:20px 24px;\">" +
+    metricsHtml +
+    utilHtml +
+    "<div style=\"margin-bottom:6px;display:flex;align-items:center;gap:10px;\">" +
+    "<div style=\"font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#0E1F34;text-transform:uppercase;letter-spacing:0.07em;\">Contracted Accounts</div>" +
+    "<span style=\"font-family:'DM Mono',monospace;font-size:9px;padding:2px 8px;border-radius:10px;background:rgba(0,87,231,0.08);color:#4A9FFF;border:1px solid rgba(74,159,255,0.2);\">CONTRACT</span>" +
+    "</div>" +
+    "<div style=\"display:flex;gap:10px;overflow-x:auto;padding-bottom:16px;margin-bottom:20px;\">"+cCols+"</div>" +
+    "<div style=\"margin-bottom:6px;display:flex;align-items:center;gap:10px;\">" +
+    "<div style=\"font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#0E1F34;text-transform:uppercase;letter-spacing:0.07em;\">Pay-Per-Use Accounts</div>" +
+    "<span style=\"font-family:'DM Mono',monospace;font-size:9px;padding:2px 8px;border-radius:10px;background:rgba(249,115,22,0.1);color:#EA580C;border:1px solid rgba(249,115,22,0.2);\">PAY-PER-USE</span>" +
+    "</div>" +
+    "<div style=\"display:flex;gap:10px;overflow-x:auto;padding-bottom:16px;margin-bottom:20px;\">"+pCols+"</div>" +
+    winHtml +
+    "</div></body></html>";
+}
+
+
+function handleUtilUpload(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var text = e.target.result;
+    var updated = parseUtilCSV(text);
+    event.target.value = "";
+    if (updated === 0) { toast("No matching accounts found"); return; }
+    save(); renderBoard();
+    toast("Updated " + updated + " accounts");
+  };
+  reader.readAsText(file);
+}
+
+function parseUtilCSV(text) {
+  var lines = text.split("\n").map(function(l){return l.trim();});
+  var updated = 0;
+
+  function parseNum(s) {
+    if (!s) return null;
+    s = s.replace(/[$,\s]/g,"");
+    if (["#DIV/0!","#NUM!","#VALUE!","NA",""].indexOf(s) >= 0) return null;
+    var n = parseFloat(s);
+    return isNaN(n) ? null : n;
+  }
+  function parsePct(s) {
+    if (!s) return null;
+    s = s.replace(/[%\s]/g,"");
+    if (["#DIV/0!","#NUM!","#VALUE!","Outside License",""].indexOf(s) >= 0) return null;
+    var n = parseFloat(s);
+    return isNaN(n) ? null : n;
+  }
+
+  function splitRow(line) {
+    var result = [], cur = "", inQ = false;
+    for (var i=0;i<line.length;i++) {
+      if (line[i]==='"') { inQ=!inQ; }
+      else if (line[i]===','&&!inQ) { result.push(cur.trim()); cur=""; }
+      else { cur+=line[i]; }
+    }
+    result.push(cur.trim());
+    return result;
+  }
+
+  // Find header row and map column names to indices
+  var colIdx = {};
+  var headerRow = null;
+  for (var h=0; h<15; h++) {
+    if (!lines[h]) continue;
+    var hrow = splitRow(lines[h]);
+    if (hrow.indexOf("Current usage (%)") >= 0 || hrow.indexOf("On track usage") >= 0) {
+      headerRow = hrow;
+      break;
+    }
+  }
+  if (!headerRow) return 0;
+
+  headerRow.forEach(function(v, i) {
+    var k = v.replace(/\r/g,"").trim();
+    if (k) colIdx[k] = i;
+  });
+
+  // Key column indices by name  -  trim spaces for matching
+  function ci(name) {
+    // exact match first
+    if (colIdx[name] !== undefined) return colIdx[name];
+    // try with surrounding spaces stripped from all keys
+    var keys = Object.keys(colIdx);
+    for (var ki=0; ki<keys.length; ki++) {
+      if (keys[ki].trim() === name.trim()) return colIdx[keys[ki]];
+    }
+    return undefined;
+  }
+
+  var iCurrPct     = ci("Current License Usage (%)");
+  var iCurrDollars = ci("Current usage ($)");
+  var iLicense     = ci("License ($)");
+  var iStartDate   = ci("License start date");
+  var iCompMo      = ci("Completed months");
+  var iOnTrack     = ci("On track usage");
+  var iVariance    = ci("Variance to track usage");
+  var iMtd         = ci("March Expected Revenue To Date") || 14;
+
+  function normalize(s) {
+    return s.toLowerCase().replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim();
+  }
+  function tokenMatch(a, b) {
+    var ta = normalize(a).split(" ").filter(function(x){return x.length>2;});
+    var tb = normalize(b).split(" ").filter(function(x){return x.length>2;});
+    if (!ta.length||!tb.length) return 0;
+    var shared = ta.filter(function(t){return tb.indexOf(t)>=0;});
+    return shared.length / Math.max(ta.length, tb.length);
+  }
+  function findAccount(name) {
+    var exact = contracted.find(function(a){return normalize(a.name)===normalize(name);});
+    if (exact) return exact;
+    var nm = normalize(name);
+    if (nm.indexOf("citadel")>=0||nm.indexOf("acra")>=0) return contracted.find(function(a){return a.name.toLowerCase().indexOf("citadel")>=0||a.name.toLowerCase().indexOf("acra")>=0;});
+    if (nm.indexOf("abl")>=0&&nm.indexOf("rpc")>=0) return contracted.find(function(a){return a.name.toLowerCase().indexOf("abl")>=0;});
+    if ((nm.indexOf("san")>=0&&nm.indexOf("francisco")>=0)||nm.indexOf("fancisco")>=0) return contracted.find(function(a){return a.name.toLowerCase().indexOf("san francisco")>=0;});
+    if (nm.indexOf("hometown")>=0) return null;
+    var best=null, bestScore=0;
+    contracted.forEach(function(a){
+      var s=tokenMatch(name,a.name);
+      if(s>bestScore){bestScore=s;best=a;}
+    });
+    return bestScore>=0.25 ? best : null;
+  }
+
+  // Find first data row (after header)
+  var dataStart = 0;
+  for (var d=0; d<lines.length; d++) {
+    if (lines[d] === (headerRow.join ? "" : "")) continue;
+    if (d > 8) { dataStart = d+1; break; }
+  }
+
+  for (var i=dataStart; i<lines.length; i++) {
+    var line = lines[i];
+    if (!line || line.indexOf("TOTAL")>=0) continue;
+    var row = splitRow(line);
+    if (row.length < 10) continue;
+    var name = row[1].replace(/"/g,"").replace(/\r/g,"").trim();
+    if (!name) continue;
+
+    var overage = (iCurrPct !== undefined && row[iCurrPct] && row[iCurrPct].indexOf("Outside License")>=0);
+    var currPct     = overage ? 150 : (iCurrPct!==undefined ? parsePct(row[iCurrPct]) : null);
+    var onTrackPct  = iOnTrack!==undefined ? parsePct(row[iOnTrack]) : null;
+    var variancePct = iVariance!==undefined ? parsePct(row[iVariance]) : null;
+    var licenseTotal= iLicense!==undefined ? parseNum(row[iLicense]) : null;
+    var currDollars = iCurrDollars!==undefined ? parseNum(row[iCurrDollars]) : null;
+    var mtdRevenue  = iMtd!==undefined ? parseNum(row[iMtd]) : null;
+    var completedMo = iCompMo!==undefined ? parseNum(row[iCompMo]) : null;
+
+    if (currPct===null && licenseTotal===null) continue;
+
+    var status;
+    if (overage||(currPct!==null&&currPct>=100)) status="overage";
+    else if (variancePct!==null&&variancePct>=20) status="fast";
+    else if (variancePct!==null&&variancePct<=-20) status="slow";
+    else if (variancePct!==null) status="on_track";
+    else status="unknown";
+
+    var acct = findAccount(name);
+    if (!acct) continue;
+
+    acct.util = {
+      currPct: currPct,
+      onTrackPct: onTrackPct,
+      variancePct: variancePct,
+      licenseTotal: licenseTotal,
+      currDollars: currDollars,
+      mtdRevenue: mtdRevenue,
+      completedMonths: completedMo,
+      overage: overage,
+      status: status,
+      updatedAt: new Date().toISOString().split("T")[0]
+    };
+
+    if (status==="overage") { acct.health = Math.max(acct.health||3, 4); }
+    else if (status==="fast") { acct.health = Math.max(acct.health||3, 4); }
+    else if (status==="slow") { if (!acct.health||acct.health>2) acct.health = Math.min(acct.health||4, 3); }
+
+    updated++;
+  }
+  return updated;
+}
+
+
+function renderUtilBar(util) {
+  if (!util || util.currPct===null) return "";
+  var pct = Math.min(util.currPct, 150);
+  var target = util.onTrackPct || 0;
+  var color = util.status==="overage"?"#C8182E":util.status==="fast"?"#F97316":util.status==="slow"?"#C47800":"#00963E";
+  var markerLeft = Math.min(target, 100);
+  var label = util.status==="overage"?"OVERAGE":util.status==="fast"?"AHEAD OF PACE":util.status==="slow"?"BEHIND PACE":"ON TRACK";
+  var valColor = util.status==="overage"?"color:#C8182E":util.status==="fast"?"color:#F97316":util.status==="slow"?"color:#C47800":"color:#00963E";
+  return "<div class=\"util-bar-wrap\">" +
+    "<div class=\"util-bar-label\">" +
+    "<span class=\"util-bar-lbl\">Subscription Used</span>" +
+    "<span class=\"util-bar-val\" style=\""+valColor+"\">"+Math.round(util.currPct||0)+"%  -  "+label+"</span>" +
+    "</div>" +
+    "<div class=\"util-bar-track\">" +
+    "<div class=\"util-bar-fill\" style=\"width:"+Math.min(pct,100)+"%;background:"+color+";\"></div>" +
+    (target>0?"<div class=\"util-bar-marker\" style=\"left:"+markerLeft+"%;\"></div>":"") +
+    "</div>" +
+    "<div style=\"font-family:'DM Mono',monospace;font-size:9px;color:#8496AB;margin-top:3px;text-align:right;\">Updated "+esc(util.updatedAt||"")+"</div>" +
+    "</div>";
+}
+
+load();
+renderBoard();
+</script>
+</body>
+</html>
