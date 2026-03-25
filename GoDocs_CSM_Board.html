@@ -128,19 +128,11 @@
   .snapshot-section { margin-bottom: 18px; }
   .snapshot-section-label { font-size: 10px; font-weight: 500; letter-spacing: .07em; text-transform: uppercase; color: var(--text3); padding-bottom: 7px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
   .snapshot-item { font-size: 12px; color: var(--text2); padding: 4px 0; line-height: 1.5; display: flex; gap: 8px; }
-  .snapshot-item::before { content: '—'; color: var(--text3); flex-shrink: 0; }
+  .snapshot-item::before { content: '&mdash;'; color: var(--text3); flex-shrink: 0; }
   .snapshot-empty { font-size: 12px; color: var(--text3); font-style: italic; padding: 4px 0; }
   .copy-btn { font-size: 12px; font-family: 'DM Sans', sans-serif; padding: 6px 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: transparent; color: var(--text2); cursor: pointer; }
   .copy-btn:hover { background: var(--surface2); }
   .copy-btn.copied { color: var(--green); border-color: var(--green-border); }
-
-  /* GitHub Settings */
-  .gh-bar { display:flex; align-items:center; gap:8px; padding:6px 0 16px; }
-  .gh-status { font-size:11px; font-family:'DM Mono',monospace; padding:3px 10px; border-radius:20px; }
-  .gh-status.connected { background:var(--green-bg); color:var(--green); border:1px solid var(--green-border); }
-  .gh-status.disconnected { background:var(--amber-bg); color:var(--amber); border:1px solid var(--amber-border); }
-  .gh-status.saving { background:var(--blue-bg); color:var(--blue); border:1px solid var(--blue-border); }
-  .gh-status.error { background:var(--red-bg); color:var(--red); border:1px solid var(--red-border); }
 
   /* Modal */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.25); z-index: 100; align-items: center; justify-content: center; }
@@ -163,12 +155,10 @@
   <div class="header">
     <div class="header-left">
       <h1>CSM Board</h1>
-      <div class="subtitle">Laura Hatcher — GoDocs</div>
+      <div class="subtitle">Laura Hatcher &mdash; GoDocs</div>
     </div>
     <div class="header-right">
       <div class="date-badge" id="date-badge"></div>
-      <span class="gh-status disconnected" id="gh-status">⚙ Not connected</span>
-      <button class="btn-outline" onclick="openGHSettings()" style="font-size:11px;padding:4px 10px;">GitHub</button>
       <button class="btn-outline" onclick="openModal()">+ Add task</button>
     </div>
   </div>
@@ -211,24 +201,10 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="gh-modal">
-  <div class="modal">
-    <h2>GitHub Sync Settings</h2>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5;">Your data will be saved to your <code>godocs-tools</code> repo as a JSON file. Enter your GitHub token and username below — stored in this browser only.</p>
-    <div class="modal-field"><label>GitHub Username</label><input type="text" id="gh-user" placeholder="e.g. laura-hatcher"></div>
-    <div class="modal-field"><label>Personal Access Token</label><input type="password" id="gh-token" placeholder="ghp_..."></div>
-    <div class="modal-field"><label>Repository</label><input type="text" id="gh-repo" placeholder="godocs-tools" value="godocs-tools"></div>
-    <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeGHSettings()">Cancel</button>
-      <button class="btn-save" onclick="saveGHSettings()">Save & Connect</button>
-    </div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="modal">
   <div class="modal">
     <h2>Add task</h2>
-    <div class="modal-field"><label>Title</label><input type="text" id="m-title" placeholder="e.g. Flagstar — contract review"></div>
+    <div class="modal-field"><label>Title</label><input type="text" id="m-title" placeholder="e.g. Flagstar &mdash; contract review"></div>
     <div class="modal-row">
       <div class="modal-field"><label>Category</label>
         <select id="m-cat">
@@ -267,117 +243,43 @@
 </div>
 
 <script>
-// ── GitHub Sync ──────────────────────────────────────────────
-var GH_FILE = 'csm-board-data.json';
-var ghUser, ghToken, ghRepo, ghSha;
-
-function ghLoad() {
-  ghUser  = localStorage.getItem('gh_user')  || '';
-  ghToken = localStorage.getItem('gh_token') || '';
-  ghRepo  = localStorage.getItem('gh_repo')  || 'godocs-tools';
-}
-
-function setStatus(state, msg) {
-  var el = document.getElementById('gh-status');
-  el.className = 'gh-status ' + state;
-  el.textContent = msg;
-}
-
-async function fetchFromGitHub() {
-  if (!ghUser || !ghToken) return false;
-  try {
-    setStatus('saving', '↓ Loading...');
-    var r = await fetch('https://api.github.com/repos/' + ghUser + '/' + ghRepo + '/contents/' + GH_FILE, {
-      headers: { 'Authorization': 'token ' + ghToken, 'Accept': 'application/vnd.github.v3+json' }
-    });
-    if (r.status === 404) {
-      setStatus('connected', '✓ Connected (new file)');
-      return false;
-    }
-    if (!r.ok) { setStatus('error', '✗ Auth failed'); return false; }
-    var json = await r.json();
-    ghSha = json.sha;
-    var data = JSON.parse(atob(json.content.replace(/\n/g, '')));
-    tasks   = data.tasks   || JSON.parse(JSON.stringify(DEFAULT));
-    doneLog = data.doneLog || [];
-    tasks.forEach(function(t){ if(!t.log) t.log=[]; });
-    setStatus('connected', '✓ Connected');
-    return true;
-  } catch(e) {
-    setStatus('error', '✗ Error loading');
-    return false;
-  }
-}
-
-async function saveToGitHub() {
-  if (!ghUser || !ghToken) return;
-  setStatus('saving', '↑ Saving...');
-  try {
-    var content = btoa(unescape(encodeURIComponent(JSON.stringify({ tasks: tasks, doneLog: doneLog }))));
-    var body = { message: 'CSM Board update', content: content };
-    if (ghSha) body.sha = ghSha;
-    var r = await fetch('https://api.github.com/repos/' + ghUser + '/' + ghRepo + '/contents/' + GH_FILE, {
-      method: 'PUT',
-      headers: { 'Authorization': 'token ' + ghToken, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
-      body: JSON.stringify(body)
-    });
-    if (!r.ok) { setStatus('error', '✗ Save failed'); return; }
-    var json = await r.json();
-    ghSha = json.content.sha;
-    setStatus('connected', '✓ Saved ' + dateShort());
-  } catch(e) {
-    setStatus('error', '✗ Save error');
-  }
-}
-
-function openGHSettings() {
-  document.getElementById('gh-user').value  = ghUser;
-  document.getElementById('gh-token').value = ghToken;
-  document.getElementById('gh-repo').value  = ghRepo || 'godocs-tools';
-  document.getElementById('gh-modal').classList.add('open');
-}
-function closeGHSettings() { document.getElementById('gh-modal').classList.remove('open'); }
-async function saveGHSettings() {
-  ghUser  = document.getElementById('gh-user').value.trim();
-  ghToken = document.getElementById('gh-token').value.trim();
-  ghRepo  = document.getElementById('gh-repo').value.trim() || 'godocs-tools';
-  localStorage.setItem('gh_user',  ghUser);
-  localStorage.setItem('gh_token', ghToken);
-  localStorage.setItem('gh_repo',  ghRepo);
-  closeGHSettings();
-  var loaded = await fetchFromGitHub();
-  nextId = tasks.reduce(function(m,t){ return Math.max(m,t.id); }, 0) + 1;
-  render();
-}
-
 var COLS=['today','inprog','wait','done'];
 var COL_LABELS={today:'Today',inprog:'In progress',wait:'Waiting',done:'Done'};
 var CAT_LABELS={rev:'Strategic Revenue',exe:'Executive Initiative',cst:'Customer Deliverable',exp:'Expansion Revenue',ren:'Renewal Monitoring',mkt:'Marketing',mgm:'Customer Management'};
 var DOT={1:'#C9352A',2:'#936010',3:'#1A7A6E',4:'#1B5FA8',5:'#1B5FA8',6:'#9C2D5E',7:'#6B6860'};
 
 var DEFAULT=[
-  {id:1,p:1,cat:'rev',title:'Anchor — Renewal Negotiation',amt:'$525K–$700K',status:'Counter proposal delivered; executive team aligned.',next:'Anchor meeting today — hold structure and reinforce value narrative.',col:'today',priority:true,revenue:true,subs:[],log:[],open:false},
+  {id:1,p:1,cat:'rev',title:'Anchor &mdash; Renewal Negotiation',amt:'$525K&ndash;$700K',status:'Counter proposal delivered; executive team aligned.',next:'Anchor meeting today &mdash; hold structure and reinforce value narrative.',col:'today',priority:true,revenue:true,subs:[],log:[],open:false},
   {id:2,p:2,cat:'exe',title:'GoDocs Pricing Model Simplification',amt:'',status:'CEO review complete; revisions incorporated.',next:"Pending Adam's approval to commence launch.",col:'wait',priority:false,revenue:false,subs:[],log:[],open:false},
-  {id:3,p:3,cat:'cst',title:'Acra — QBR Deck',amt:'',status:'V1 complete; internal comments received.',next:'Final edits and polish today — delivery Tuesday.',col:'today',priority:true,revenue:false,subs:[],log:[],open:false},
-  {id:4,p:4,cat:'exp',title:'Cake — Contract Expansion',amt:'$200K → $400K',status:'Follow-up sent.',next:'Await response and decision before EOM.',col:'wait',priority:false,revenue:true,subs:[],log:[],open:false},
-  {id:5,p:5,cat:'ren',title:'CU Evolution — Renewal Confirmation',amt:'',status:'Renewal confirmation nudge sent.',next:'Monitor for written confirmation.',col:'wait',priority:false,revenue:true,subs:[],log:[],open:false},
-  {id:6,p:6,cat:'mkt',title:'Acra — Marketing Actions',amt:'',status:'QBR scheduled; marketing interest flagged.',next:'During QBR: review Q4 data and mention marketing stats interest.',col:'inprog',priority:false,revenue:false,subs:[{id:'s1',label:'During QBR: review Q4 data',done:false},{id:'s2',label:'Mention marketing interest in their stats',done:false},{id:'s3',label:'Send intro email to marketing',done:false}],log:[],open:false},
-  {id:7,p:6,cat:'mkt',title:'Repeat Customers Campaign — Approvals',amt:'',status:'Pending Anna resending campaign resources.',next:'Ask for approval once Anna resends resources.',col:'wait',priority:false,revenue:false,subs:[{id:'s4',label:'Colorado Fed',done:false},{id:'s5',label:'Battle Bank',done:false},{id:'s6',label:'EverBank',done:false},{id:'s7',label:'SF Federal Credit Union',done:false}],log:[],open:false},
-  {id:8,p:6,cat:'mkt',title:'Cyprus — Marketing Partnership Intro',amt:'',status:'No outreach yet.',next:'Connect Jess and Anna with Cyprus for partnership discussion.',col:'inprog',priority:false,revenue:false,subs:[],log:[],open:false},
-  {id:9,p:6,cat:'mkt',title:'Longhorn — DSCR Launch Promo',amt:'',status:'No outreach yet.',next:'Share with Jeff D; connect marketing via email if appropriate.',col:'inprog',priority:false,revenue:false,subs:[],log:[],open:false},
-  {id:10,p:7,cat:'mgm',title:'HouseMax — Redraw Report / QBR Lite',amt:'',status:'Deferred to next week.',next:'Revisit next week.',col:'inprog',priority:false,revenue:false,subs:[],log:[],open:false},
-  {id:11,p:7,cat:'mgm',title:'Connections Program — New Additions',amt:'',status:'Add to cadence when bandwidth allows.',next:'Add CFSB and Cyprus CU to program.',col:'inprog',priority:false,revenue:false,subs:[{id:'s8',label:'CFSB',done:false},{id:'s9',label:'Cyprus CU',done:false}],log:[],open:false}
+  {id:3,p:3,cat:'cst',title:'Acra &mdash; QBR Deck',amt:'',status:'V1 complete; internal comments received.',next:'Final edits and polish today &mdash; delivery Tuesday.',col:'today',priority:true,revenue:false,subs:[],log:[],open:false},
+  {id:4,p:4,cat:'exp',title:'Cake &mdash; Contract Expansion',amt:'$200K &rarr; $400K',status:'Follow-up sent.',next:'Await response and decision before EOM.',col:'wait',priority:false,revenue:true,subs:[],log:[],open:false},
+  {id:5,p:5,cat:'ren',title:'CU Evolution &mdash; Renewal Confirmation',amt:'',status:'Renewal confirmation nudge sent.',next:'Monitor for written confirmation.',col:'wait',priority:false,revenue:true,subs:[],log:[],open:false},
+  {id:6,p:6,cat:'mkt',title:'Acra &mdash; Marketing Actions',amt:'',status:'QBR scheduled; marketing interest flagged.',next:'During QBR: review Q4 data and mention marketing stats interest.',col:'inprog',priority:false,revenue:false,subs:[{id:'s1',label:'During QBR: review Q4 data',done:false},{id:'s2',label:'Mention marketing interest in their stats',done:false},{id:'s3',label:'Send intro email to marketing',done:false}],log:[],open:false},
+  {id:7,p:6,cat:'mkt',title:'Repeat Customers Campaign &mdash; Approvals',amt:'',status:'Pending Anna resending campaign resources.',next:'Ask for approval once Anna resends resources.',col:'wait',priority:false,revenue:false,subs:[{id:'s4',label:'Colorado Fed',done:false},{id:'s5',label:'Battle Bank',done:false},{id:'s6',label:'EverBank',done:false},{id:'s7',label:'SF Federal Credit Union',done:false}],log:[],open:false},
+  {id:8,p:6,cat:'mkt',title:'Cyprus &mdash; Marketing Partnership Intro',amt:'',status:'No outreach yet.',next:'Connect Jess and Anna with Cyprus for partnership discussion.',col:'inprog',priority:false,revenue:false,subs:[],log:[],open:false},
+  {id:9,p:6,cat:'mkt',title:'Longhorn &mdash; DSCR Launch Promo',amt:'',status:'No outreach yet.',next:'Share with Jeff D; connect marketing via email if appropriate.',col:'inprog',priority:false,revenue:false,subs:[],log:[],open:false},
+  {id:10,p:7,cat:'mgm',title:'HouseMax &mdash; Redraw Report / QBR Lite',amt:'',status:'Deferred to next week.',next:'Revisit next week.',col:'inprog',priority:false,revenue:false,subs:[],log:[],open:false},
+  {id:11,p:7,cat:'mgm',title:'Connections Program &mdash; New Additions',amt:'',status:'Add to cadence when bandwidth allows.',next:'Add CFSB and Cyprus CU to program.',col:'inprog',priority:false,revenue:false,subs:[{id:'s8',label:'CFSB',done:false},{id:'s9',label:'Cyprus CU',done:false}],log:[],open:false}
 ];
 
 var tasks, doneLog;
-ghLoad();
-// Start with defaults; fetchFromGitHub() will override if connected
-tasks = JSON.parse(JSON.stringify(DEFAULT));
-doneLog = [];
-var nextId = tasks.reduce(function(m,t){ return Math.max(m,t.id); }, 0) + 1;
+try {
+  var st=localStorage.getItem('godocs_csm_v2');
+  var sl=localStorage.getItem('godocs_csm_log');
+  tasks=st?JSON.parse(st):JSON.parse(JSON.stringify(DEFAULT));
+  doneLog=sl?JSON.parse(sl):[];
+  tasks.forEach(function(t){if(!t.log)t.log=[];});
+} catch(e) {
+  tasks=JSON.parse(JSON.stringify(DEFAULT));
+  doneLog=[];
+}
+var nextId=tasks.reduce(function(m,t){return Math.max(m,t.id);},0)+1;
 
 function save(){
-  saveToGitHub();
+  try{
+    localStorage.setItem('godocs_csm_v2',JSON.stringify(tasks));
+    localStorage.setItem('godocs_csm_log',JSON.stringify(doneLog));
+  }catch(e){}
 }
 
 function dateShort(){return new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});}
@@ -483,13 +385,13 @@ function cardHtml(t){
   h+='<div class="card-title'+(t.col==='done'?' done':'')+'">'+t.title+(t.amt?' <span class="card-amt">'+t.amt+'</span>':'')+'</div></div>';
   h+='<div class="flags">';
   h+='<span class="badge b-'+t.cat+'">'+CAT_LABELS[t.cat]+'</span>';
-  h+='<span class="flag '+(hp?'flag-priority-on':'flag-priority-off')+'" data-id="'+t.id+'" data-flag="priority">'+(hp?'▲ High priority':'▲ Priority')+'</span>';
+  h+='<span class="flag '+(hp?'flag-priority-on':'flag-priority-off')+'" data-id="'+t.id+'" data-flag="priority">'+(hp?'&#9650; High priority':'&#9650; Priority')+'</span>';
   h+='<span class="flag '+(hr?'flag-revenue-on':'flag-revenue-off')+'" data-id="'+t.id+'" data-flag="revenue">'+(hr?'$ Revenue':'$ Revenue')+'</span>';
   h+='</div>';
   h+='<div class="divider"></div>';
   h+='<div class="narrative">';
-  h+='<div><div class="narr-label">Status</div><div class="narr-text">'+(t.status||'—')+'</div></div>';
-  h+='<div><div class="narr-label">Next</div><div class="narr-text">'+(t.next||'—')+'</div></div>';
+  h+='<div><div class="narr-label">Status</div><div class="narr-text">'+(t.status||'&mdash;')+'</div></div>';
+  h+='<div><div class="narr-label">Next</div><div class="narr-text">'+(t.next||'&mdash;')+'</div></div>';
   h+='</div>';
   if(t.open){
     h+='<div class="card-expanded">';
@@ -525,7 +427,7 @@ function cardHtml(t){
 
 function renderLog(){
   var el=document.getElementById('log-list');
-  if(!doneLog.length){el.innerHTML='<div class="empty-state">Nothing done yet — move a card to Done and it will appear here, timestamped.</div>';return;}
+  if(!doneLog.length){el.innerHTML='<div class="empty-state">Nothing done yet &mdash; move a card to Done and it will appear here, timestamped.</div>';return;}
   el.innerHTML=doneLog.map(function(e){
     return '<div class="log-entry">'
       +'<div style="flex:1;min-width:0">'
@@ -534,7 +436,7 @@ function renderLog(){
       +'<div style="display:flex;flex-wrap:wrap;gap:5px">'
       +'<span class="badge b-'+e.cat+'">'+CAT_LABELS[e.cat]+'</span>'
       +(e.revenue?'<span class="badge" style="background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)">$ Revenue</span>':'')
-      +(e.priority?'<span class="badge" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)">▲ Priority</span>':'')
+      +(e.priority?'<span class="badge" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)">&#9650; Priority</span>':'')
       +'</div></div>'
       +'<div class="log-entry-date">'+e.date+'</div>'
       +'</div>';
@@ -562,9 +464,9 @@ function buildSnapshot(){
     h+='</div>';
   }
   section('Completed',completed,function(e){h+='<div class="snapshot-item">'+e.title+(e.amt?' ('+e.amt+')':'')+'</div>';},'Nothing moved to Done yet.');
-  section('Today / active',todayItems,function(t){h+='<div class="snapshot-item">'+t.title+' — '+t.next+'</div>';},'No items in Today.');
+  section('Today / active',todayItems,function(t){h+='<div class="snapshot-item">'+t.title+' &mdash; '+t.next+'</div>';},'No items in Today.');
   section('Open revenue items',revOpen,function(t){h+='<div class="snapshot-item">'+t.title+(t.amt?' ('+t.amt+')':'')+' ['+COL_LABELS[t.col]+']</div>';},'None flagged.');
-  section('Waiting on others',waiting,function(t){h+='<div class="snapshot-item">'+t.title+' — '+t.next+'</div>';},'Nothing waiting.');
+  section('Waiting on others',waiting,function(t){h+='<div class="snapshot-item">'+t.title+' &mdash; '+t.next+'</div>';},'Nothing waiting.');
   section('High priority open',hiPri,function(t){h+='<div class="snapshot-item">'+t.title+' ['+COL_LABELS[t.col]+']</div>';},'None flagged.');
   document.getElementById('snapshot-content').innerHTML=h;
 }
@@ -579,8 +481,8 @@ function copySnapshot(){
   var lines=[title,''];
   function sec(label,items,fn,empty){
     lines.push(label.toUpperCase());
-    if(!items.length)lines.push('  — '+empty);
-    else items.forEach(function(x){lines.push('  — '+fn(x));});
+    if(!items.length)lines.push('  &mdash; '+empty);
+    else items.forEach(function(x){lines.push('  &mdash; '+fn(x));});
     lines.push('');
   }
   sec('Completed',completed,function(e){return e.title+(e.amt?' ('+e.amt+')':'');},'Nothing done yet.');
@@ -623,19 +525,8 @@ function addTask(){
 }
 
 document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
-document.getElementById('gh-modal').addEventListener('click',function(e){if(e.target===this)closeGHSettings();});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();closeGHSettings();}});
-
-// Load from GitHub on startup if credentials exist
-(async function(){
-  if(ghUser && ghToken){
-    var loaded = await fetchFromGitHub();
-    if(loaded){ nextId=tasks.reduce(function(m,t){return Math.max(m,t.id);},0)+1; }
-  } else {
-    setStatus('disconnected','⚙ Click GitHub to connect');
-  }
-  render();
-})();
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
+render();
 </script>
 </body>
 </html>
