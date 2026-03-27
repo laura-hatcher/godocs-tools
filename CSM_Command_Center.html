@@ -602,7 +602,7 @@ function buildCard(a) {
   // Renewal urgency row
   var renewalHtml = "";
   if(curBoard==="contracted" && a.termEnd) {
-    var urg = renewalUrgency(a.termEnd);
+    var urg = renewalUrgency(a);
     if(urg && urg.days <= 90) {
       renewalHtml = "<div class=\"renewal-row\">" +
         "<span class=\"renewal-lbl\">Term End</span>" +
@@ -1333,16 +1333,30 @@ function parseContractCSV(text) {
   return updated;
 }
 
-function renewalUrgency(termEnd) {
-  if(!termEnd) return null;
+function renewalUrgency(a) {
   var today = new Date(); today.setHours(0,0,0,0);
-  var end = new Date(termEnd+"T00:00:00");
+  // Use termEnd if it's in the future, otherwise fall back to contractEnd
+  var termEnd = a.termEnd;
+  var contractEnd = a.contractEnd;
+  var dateToUse = null;
+  if(termEnd) {
+    var te = new Date(termEnd+"T00:00:00");
+    if(te >= today) { dateToUse = termEnd; }
+    else if(contractEnd) {
+      var ce = new Date(contractEnd+"T00:00:00");
+      if(ce >= today) { dateToUse = contractEnd; }
+    }
+  } else if(contractEnd) {
+    dateToUse = contractEnd;
+  }
+  if(!dateToUse) return null;
+  var end = new Date(dateToUse+"T00:00:00");
   var days = Math.round((end-today)/(1000*60*60*24));
-  if(days<=0)  return {cls:"renewal-critical", label:"EXPIRED",    days:days};
-  if(days<=30) return {cls:"renewal-critical", label:"<30 days",   days:days};
-  if(days<=60) return {cls:"renewal-soon",     label:"<60 days",   days:days};
-  if(days<=90) return {cls:"renewal-soon",     label:"<90 days",   days:days};
-  return       {cls:"renewal-far",             label:fmtD(termEnd), days:days};
+  if(days<=0)  return null; // truly expired, don't flag
+  if(days<=30) return {cls:"renewal-critical", label:"<30 days",  days:days, date:dateToUse};
+  if(days<=60) return {cls:"renewal-critical", label:"<60 days",  days:days, date:dateToUse};
+  if(days<=90) return {cls:"renewal-soon",     label:"<90 days",  days:days, date:dateToUse};
+  return null; // beyond 90 days, no flag needed on card
 }
 
 load();
