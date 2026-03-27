@@ -407,12 +407,21 @@ function toast(msg) {
 
 function renewalUrgency(a) {
   var today = new Date(); today.setHours(0,0,0,0);
-  // Use termEnd, fall back to contractEnd
-  var dateToUse = a.termEnd || a.contractEnd;
+  // Use termEnd if in the future, otherwise fall back to contractEnd
+  var dateToUse = null;
+  if(a.termEnd) {
+    var te = new Date(a.termEnd+"T00:00:00");
+    if(te >= today) { dateToUse = a.termEnd; }
+    else if(a.contractEnd) {
+      var ce = new Date(a.contractEnd+"T00:00:00");
+      if(ce >= today) { dateToUse = a.contractEnd; }
+    }
+  } else if(a.contractEnd) {
+    dateToUse = a.contractEnd;
+  }
   if(!dateToUse) return null;
   var end = new Date(dateToUse+"T00:00:00");
   var days = Math.round((end-today)/(1000*60*60*24));
-  if(days < 0)   return {cls:"renewal-critical", label:"EXPIRED",  days:days, date:dateToUse};
   if(days <= 30) return {cls:"renewal-critical", label:"<30 days", days:days, date:dateToUse};
   if(days <= 60) return {cls:"renewal-critical", label:"<60 days", days:days, date:dateToUse};
   if(days <= 90) return {cls:"renewal-soon",     label:"<90 days", days:days, date:dateToUse};
