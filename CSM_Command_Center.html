@@ -407,26 +407,16 @@ function toast(msg) {
 
 function renewalUrgency(a) {
   var today = new Date(); today.setHours(0,0,0,0);
-  var dateToUse = null;
-  if(a.renewalNoticeDate) {
-    var rn = new Date(a.renewalNoticeDate+"T00:00:00");
-    var daysToNotice = Math.round((rn-today)/(1000*60*60*24));
-    if(daysToNotice <= 90 && daysToNotice >= 0) {
-      dateToUse = a.renewalNoticeDate;
-    }
-  } else if(a.contractEnd) {
-    var ce = new Date(a.contractEnd+"T00:00:00");
-    var daysToContract = Math.round((ce-today)/(1000*60*60*24));
-    if(daysToContract <= 90 && daysToContract >= 0) {
-      dateToUse = a.contractEnd;
-    }
-  }
+  // Use termEnd, fall back to contractEnd
+  var dateToUse = a.termEnd || a.contractEnd;
   if(!dateToUse) return null;
   var end = new Date(dateToUse+"T00:00:00");
   var days = Math.round((end-today)/(1000*60*60*24));
-  if(days<=30) return {cls:"renewal-critical", label:"<30 days",  days:days, date:dateToUse};
-  if(days<=60) return {cls:"renewal-critical", label:"<60 days",  days:days, date:dateToUse};
-  return       {cls:"renewal-soon",     label:"<90 days",  days:days, date:dateToUse};
+  if(days < 0)   return {cls:"renewal-critical", label:"EXPIRED",  days:days, date:dateToUse};
+  if(days <= 30) return {cls:"renewal-critical", label:"<30 days", days:days, date:dateToUse};
+  if(days <= 60) return {cls:"renewal-critical", label:"<60 days", days:days, date:dateToUse};
+  if(days <= 90) return {cls:"renewal-soon",     label:"<90 days", days:days, date:dateToUse};
+  return         {cls:"renewal-far",             label:fmtD(dateToUse), days:days, date:dateToUse};
 }
 
 function renderBoard() {
@@ -498,12 +488,13 @@ function buildCard(a) {
     else if (a.util.status==="slow") badges+="<span class=\"bdg bdg-slow\">&darr; pace</span>";
   }
   var renewalHtml = "";
-  if(curBoard==="contracted") {
+  if(curBoard==="contracted" && (a.termEnd||a.contractEnd)) {
     var urg = renewalUrgency(a);
     if(urg) {
+      var termLabel = (a.termEnd||a.contractEnd);
       renewalHtml = "<div class=\"renewal-row\">" +
-        "<span class=\"renewal-lbl\">Renewal Notice</span>" +
-        "<span class=\"renewal-val "+urg.cls+"\">"+urg.label+"</span>" +
+        "<span class=\"renewal-lbl\">Term End</span>" +
+        "<span class=\"renewal-val "+urg.cls+"\">"+fmtD(termLabel)+" &mdash; "+urg.label+"</span>" +
         "</div>";
     }
   }
