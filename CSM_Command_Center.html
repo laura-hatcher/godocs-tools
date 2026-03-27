@@ -407,21 +407,13 @@ function toast(msg) {
 
 function renewalUrgency(a) {
   var today = new Date(); today.setHours(0,0,0,0);
-  // Use termEnd if in the future, otherwise fall back to contractEnd
-  var dateToUse = null;
-  if(a.termEnd) {
-    var te = new Date(a.termEnd+"T00:00:00");
-    if(te >= today) { dateToUse = a.termEnd; }
-    else if(a.contractEnd) {
-      var ce = new Date(a.contractEnd+"T00:00:00");
-      if(ce >= today) { dateToUse = a.contractEnd; }
-    }
-  } else if(a.contractEnd) {
-    dateToUse = a.contractEnd;
-  }
+  // Always use contractEnd as the renewal signal — this is the true contract end date.
+  // termEnd is a subscription period reset and is not a renewal event for multi-year contracts.
+  var dateToUse = a.contractEnd || a.termEnd;
   if(!dateToUse) return null;
   var end = new Date(dateToUse+"T00:00:00");
   var days = Math.round((end-today)/(1000*60*60*24));
+  if(days < 0)   return null;
   if(days <= 30) return {cls:"renewal-critical", label:"<30 days", days:days, date:dateToUse};
   if(days <= 60) return {cls:"renewal-critical", label:"<60 days", days:days, date:dateToUse};
   if(days <= 90) return {cls:"renewal-soon",     label:"<90 days", days:days, date:dateToUse};
@@ -500,9 +492,9 @@ function buildCard(a) {
   if(curBoard==="contracted" && (a.termEnd||a.contractEnd)) {
     var urg = renewalUrgency(a);
     if(urg) {
-      var termLabel = (a.termEnd||a.contractEnd);
+      var termLabel = (a.contractEnd||a.termEnd);
       renewalHtml = "<div class=\"renewal-row\">" +
-        "<span class=\"renewal-lbl\">Term End</span>" +
+        "<span class=\"renewal-lbl\">Contract End</span>" +
         "<span class=\"renewal-val "+urg.cls+"\">"+fmtD(termLabel)+" &mdash; "+urg.label+"</span>" +
         "</div>";
     }
